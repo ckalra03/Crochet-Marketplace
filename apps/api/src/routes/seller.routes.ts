@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
+import { payoutService } from '../modules/seller-finance/payout.service';
 import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
@@ -55,6 +56,27 @@ router.put(
     }
   },
 );
+
+// ─── Payouts ───────────────────────────────────────
+router.get('/payouts', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const result = await payoutService.listSellerPayouts(profile.id);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/payouts/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const payout = await payoutService.getPayoutDetail(req.params.id, profile.id);
+    res.json(payout);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Order Allocations ─────────────────────────────
 router.get('/orders', async (req: Request, res: Response, next: NextFunction) => {

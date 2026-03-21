@@ -6,6 +6,7 @@ import { fulfillmentService } from '../modules/fulfillment/fulfillment.service';
 import { onDemandService } from '../modules/on-demand/on-demand.service';
 import { returnService } from '../modules/returns/return.service';
 import { disputeService } from '../modules/disputes/dispute.service';
+import { payoutService } from '../modules/seller-finance/payout.service';
 import { reviewReturnSchema } from '@crochet-hub/shared';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
@@ -264,6 +265,54 @@ router.post(
     try {
       const dispute = await disputeService.resolveDispute(req.params.id, req.user!.userId, req.body);
       res.json(dispute);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Payouts ──────────────────────────────────────
+router.get('/payouts', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await payoutService.listPayouts({
+      status: req.query.status as string,
+      page: Number(req.query.page) || 1,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/payouts/generate',
+  validate(z.object({ cycleStart: z.string(), cycleEnd: z.string() })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await payoutService.generatePayoutCycle(req.user!.userId, req.body);
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.post('/payouts/:id/approve', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const payout = await payoutService.approvePayout(req.params.id, req.user!.userId);
+    res.json(payout);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/payouts/:id/mark-paid',
+  validate(z.object({ paymentReference: z.string().min(1) })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const payout = await payoutService.markPaid(req.params.id, req.user!.userId, req.body.paymentReference);
+      res.json(payout);
     } catch (err) {
       next(err);
     }

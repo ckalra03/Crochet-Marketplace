@@ -1,0 +1,21 @@
+{
+  "name": "crochet-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Crochet Hub - Managed Multi-Vendor Crochet Marketplace",
+  "packageManager": "pnpm@10.30.1",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "test:e2e": "cd apps/web && pnpm exec playwright test",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.6.0"
+  }
+}

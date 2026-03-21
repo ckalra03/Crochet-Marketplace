@@ -1,0 +1,864 @@
+// Crochet Hub - Database Schema
+// See PRD.md Section 9 for documentation
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
+}
+
+// ─── ENUMS ──────────────────────────────────────────────
+
+enum Role {
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum SellerStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+}
+
+enum ProductType {
+  READY_STOCK
+  MADE_TO_ORDER
+  ON_DEMAND
+}
+
+enum ProductStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  DISABLED
+}
+
+enum ReturnPolicy {
+  DEFECT_ONLY
+  NO_RETURN
+  STANDARD
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum OrderType {
+  STANDARD
+  ON_DEMAND
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  PROCESSING
+  IN_PRODUCTION
+  WAREHOUSE_RECEIVED
+  QC_IN_PROGRESS
+  QC_FAILED
+  PACKING
+  DISPATCHED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum PaymentGateway {
+  RAZORPAY
+  STRIPE
+  MOCK
+}
+
+enum PaymentStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum PaymentOrderStatus {
+  PENDING
+  PAID
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum OnDemandStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  QUOTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  IN_PRODUCTION
+  COMPLETED
+  CANCELLED
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ReturnReason {
+  DEFECTIVE
+  WRONG_ITEM
+  TRANSIT_DAMAGE
+  PREFERENCE_CHANGE
+  OTHER
+}
+
+enum ReturnStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  PICKUP_SCHEDULED
+  RECEIVED
+  REFUND_INITIATED
+  REFUND_COMPLETED
+  CLOSED
+}
+
+enum Resolution {
+  FULL_REFUND
+  PARTIAL_REFUND
+  REPLACEMENT
+  REJECTED
+}
+
+enum DisputeType {
+  QUALITY
+  DELIVERY
+  PAYMENT
+  OTHER
+}
+
+enum DisputeStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  CLOSED
+}
+
+enum WarehouseItemStatus {
+  AWAITING_ARRIVAL
+  RECEIVED
+  QC_PENDING
+  QC_PASSED
+  QC_FAILED
+  PACKED
+  DISPATCHED
+  RETURNED_TO_SELLER
+}
+
+enum QcResult {
+  PASS
+  FAIL
+}
+
+enum PayoutStatus {
+  DRAFT
+  CALCULATED
+  APPROVED
+  PROCESSING
+  PAID
+  FAILED
+}
+
+enum PenaltyType {
+  QC_FAILURE
+  SLA_BREACH
+  RETURN_LIABILITY
+  OTHER
+}
+
+enum PenaltyStatus {
+  PENDING
+  APPLIED
+  WAIVED
+}
+
+enum SlaType {
+  QUOTE_RESPONSE
+  DISPATCH
+  DELIVERY
+  DISPUTE_RESOLUTION
+}
+
+enum TenderStatus {
+  OPEN
+  CLOSED
+  AWARDED
+  CANCELLED
+}
+
+enum TenderBidStatus {
+  SUBMITTED
+  SHORTLISTED
+  AWARDED
+  REJECTED
+}
+
+// ─── PHASE 1 MODELS ────────────────────────────────────
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  name            String    @db.VarChar(150)
+  email           String    @db.VarChar(255)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  passwordHash    String    @map("password_hash") @db.VarChar(255)
+  phone           String?   @db.VarChar(20)
+  role            Role      @default(BUYER)
+  isActive        Boolean   @default(true) @map("is_active")
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  refreshTokens RefreshToken[]
+
+  sellerProfile        SellerProfile?   @relation("SellerUser")
+  approvedSellers      SellerProfile[]  @relation("SellerApprover")
+  approvedProducts     Product[]        @relation("ProductApprover")
+  addresses            Address[]
+  cartItems            CartItem[]
+  orders               Order[]
+  onDemandRequests     OnDemandRequest[]
+  quotesCreated        Quote[]          @relation("QuoteCreator")
+  returns              Return[]         @relation("ReturnRequester")
+  returnsResolved      Return[]         @relation("ReturnResolver")
+  disputesRaised       Dispute[]        @relation("DisputeRaiser")
+  disputesResolved     Dispute[]        @relation("DisputeResolver")
+  ratings              Rating[]
+  qcRecords            QcRecord[]
+  payoutsApproved      Payout[]         @relation("PayoutApprover")
+  auditLogs            AuditLog[]
+  penaltiesCreated     SellerPenalty[]   @relation("PenaltyCreator")
+  tendersCreated       Tender[]         @relation("TenderCreator")
+
+  @@unique([email, deletedAt], name: "uq_users_email_active")
+  @@index([role], name: "idx_users_role")
+  @@index([createdAt], name: "idx_users_created_at")
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar(500)
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "idx_refresh_tokens_user")
+  @@index([expiresAt], name: "idx_refresh_tokens_expires")
+  @@map("refresh_tokens")
+}
+
+model SellerProfile {
+  id                 String       @id @default(uuid()) @db.Uuid
+  userId             String       @unique @map("user_id") @db.Uuid
+  businessName       String       @map("business_name") @db.VarChar(255)
+  description        String?      @db.Text
+  status             SellerStatus @default(PENDING)
+  approvedBy         String?      @map("approved_by") @db.Uuid
+  approvedAt         DateTime?    @map("approved_at")
+  commissionRate     Int          @default(1500) @map("commission_rate")
+  // stored as basis points (1500 = 15.00%)
+  bankAccountDetails Json?        @map("bank_account_details") @db.JsonB
+  address            Json?        @db.JsonB
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  user     User  @relation("SellerUser", fields: [userId], references: [id])
+  approver User? @relation("SellerApprover", fields: [approvedBy], references: [id])
+
+  products        Product[]
+  orderItems      OrderItem[]
+  warehouseItems  WarehouseItem[]
+  quotes          Quote[]
+  ratings         Rating[]
+  payouts         Payout[]
+  disputes        Dispute[]
+
+  // Phase 2
+  performanceMetrics SellerPerformanceMetrics?
+  penalties          SellerPenalty[]
+  slaRecords         SlaRecord[]
+
+  // Phase 3
+  trustTierId String?          @map("trust_tier_id") @db.Uuid
+  trustTier   SellerTrustTier? @relation(fields: [trustTierId], references: [id])
+  tenderBids  TenderBid[]
+  tendersWon  Tender[]         @relation("TenderWinner")
+
+  @@index([status], name: "idx_seller_profiles_status")
+  @@map("seller_profiles")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(150)
+  slug      String   @unique @db.VarChar(150)
+  parentId  String?  @map("parent_id") @db.Uuid
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+
+  products         Product[]
+  onDemandRequests OnDemandRequest[]
+
+  @@index([parentId], name: "idx_categories_parent")
+  @@map("categories")
+}
+
+model Product {
+  id                   String        @id @default(uuid()) @db.Uuid
+  sellerProfileId      String?       @map("seller_profile_id") @db.Uuid
+  categoryId           String        @map("category_id") @db.Uuid
+  name                 String        @db.VarChar(255)
+  slug                 String        @unique @db.VarChar(255)
+  description          String        @db.Text
+  productType          ProductType   @map("product_type")
+  priceInCents         Int?          @map("price_in_cents")
+  compareAtPriceInCents Int?         @map("compare_at_price_in_cents")
+  stockQuantity        Int           @default(0) @map("stock_quantity")
+  leadTimeDays         Int?          @map("lead_time_days")
+  returnPolicy         ReturnPolicy  @map("return_policy")
+  status               ProductStatus @default(DRAFT)
+  approvedBy           String?       @map("approved_by") @db.Uuid
+  approvedAt           DateTime?     @map("approved_at")
+  isActive             Boolean       @default(true) @map("is_active")
+  meta                 Json?         @db.JsonB
+  deletedAt            DateTime?     @map("deleted_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
+
+  sellerProfile SellerProfile? @relation(fields: [sellerProfileId], references: [id])
+  category      Category       @relation(fields: [categoryId], references: [id])
+  approver      User?          @relation("ProductApprover", fields: [approvedBy], references: [id])
+
+  media      ProductMedia[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  ratings    Rating[]
+
+  @@index([productType, isActive, status], name: "idx_products_type_active")
+  @@index([sellerProfileId], name: "idx_products_seller")
+  @@index([categoryId], name: "idx_products_category")
+  @@map("products")
+}
+
+model ProductMedia {
+  id        String    @id @default(uuid()) @db.Uuid
+  productId String    @map("product_id") @db.Uuid
+  filePath  String    @map("file_path") @db.VarChar(500)
+  type      MediaType
+  sortOrder Int       @default(0) @map("sort_order")
+  isPrimary Boolean   @default(false) @map("is_primary")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId], name: "idx_product_media_product")
+  @@map("product_media")
+}
+
+model Address {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  label      String?  @db.VarChar(50)
+  line1      String   @map("line_1") @db.VarChar(255)
+  line2      String?  @map("line_2") @db.VarChar(255)
+  city       String   @db.VarChar(100)
+  state      String   @db.VarChar(100)
+  postalCode String   @map("postal_code") @db.VarChar(20)
+  country    String   @default("IN") @db.VarChar(2)
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+
+  @@index([userId], name: "idx_addresses_user")
+  @@map("addresses")
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id") @db.VarChar(100)
+  productId String   @map("product_id") @db.Uuid
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User?   @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId], name: "uq_cart_user_product")
+  @@unique([sessionId, productId], name: "uq_cart_session_product")
+  @@index([userId], name: "idx_cart_items_user")
+  @@index([sessionId], name: "idx_cart_items_session")
+  @@map("cart_items")
+}
+
+model Order {
+  id                 String             @id @default(uuid()) @db.Uuid
+  orderNumber        String             @unique @map("order_number") @db.VarChar(30)
+  userId             String             @map("user_id") @db.Uuid
+  shippingAddressId  String             @map("shipping_address_id") @db.Uuid
+  orderType          OrderType          @default(STANDARD) @map("order_type")
+  status             OrderStatus        @default(PENDING_PAYMENT)
+  subtotalInCents    Int                @map("subtotal_in_cents")
+  shippingFeeInCents Int                @default(0) @map("shipping_fee_in_cents")
+  taxAmountInCents   Int                @default(0) @map("tax_amount_in_cents")
+  discountInCents    Int                @default(0) @map("discount_in_cents")
+  totalInCents       Int                @map("total_in_cents")
+  paymentStatus      PaymentOrderStatus @default(PENDING) @map("payment_status")
+  notes              String?            @db.Text
+  placedAt           DateTime?          @map("placed_at")
+  shippedAt          DateTime?          @map("shipped_at")
+  deliveredAt        DateTime?          @map("delivered_at")
+  cancelledAt        DateTime?          @map("cancelled_at")
+  cancellationReason String?            @map("cancellation_reason") @db.Text
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  user            User    @relation(fields: [userId], references: [id])
+  shippingAddress Address @relation(fields: [shippingAddressId], references: [id])
+
+  items    OrderItem[]
+  payments Payment[]
+  returns  Return[]
+  disputes Dispute[]
+  quotes   Quote[]
+
+  @@index([userId], name: "idx_orders_user")
+  @@index([status], name: "idx_orders_status")
+  @@index([placedAt], name: "idx_orders_placed_at")
+  @@index([orderNumber], name: "idx_orders_number")
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String      @id @default(uuid()) @db.Uuid
+  orderId         String      @map("order_id") @db.Uuid
+  productId       String      @map("product_id") @db.Uuid
+  sellerProfileId String?     @map("seller_profile_id") @db.Uuid
+  productName     String      @map("product_name") @db.VarChar(255)
+  productType     ProductType @map("product_type")
+  quantity        Int
+  unitPriceInCents Int        @map("unit_price_in_cents")
+  totalPriceInCents Int       @map("total_price_in_cents")
+  status          OrderStatus @default(PENDING_PAYMENT)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  order         Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id])
+  sellerProfile SellerProfile? @relation(fields: [sellerProfileId], references: [id])
+
+  warehouseItem   WarehouseItem?
+  returns         Return[]
+  ratings         Rating[]
+  payoutLineItems PayoutLineItem[]
+
+  @@index([orderId], name: "idx_order_items_order")
+  @@index([sellerProfileId], name: "idx_order_items_seller")
+  @@map("order_items")
+}
+
+model Payment {
+  id                   String         @id @default(uuid()) @db.Uuid
+  orderId              String         @map("order_id") @db.Uuid
+  gateway              PaymentGateway
+  gatewayTransactionId String?        @unique @map("gateway_transaction_id") @db.VarChar(255)
+  gatewayOrderId       String?        @map("gateway_order_id") @db.VarChar(255)
+  amountInCents        Int            @map("amount_in_cents")
+  currency             String         @default("INR") @db.VarChar(3)
+  status               PaymentStatus  @default(INITIATED)
+  method               String?        @db.VarChar(30)
+  payload              Json?          @db.JsonB
+  paidAt               DateTime?      @map("paid_at")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId], name: "idx_payments_order")
+  @@map("payments")
+}
+
+model OnDemandRequest {
+  id              String         @id @default(uuid()) @db.Uuid
+  requestNumber   String         @unique @map("request_number") @db.VarChar(30)
+  userId          String         @map("user_id") @db.Uuid
+  categoryId      String?        @map("category_id") @db.Uuid
+  description     String         @db.Text
+  referenceImages Json?          @map("reference_images") @db.JsonB
+  budgetMinCents  Int?           @map("budget_min_cents")
+  budgetMaxCents  Int?           @map("budget_max_cents")
+  expectedBy      DateTime?      @map("expected_by") @db.Date
+  status          OnDemandStatus @default(SUBMITTED)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  quotes  Quote[]
+  tenders Tender[]
+
+  @@index([userId], name: "idx_on_demand_user")
+  @@index([status], name: "idx_on_demand_status")
+  @@map("on_demand_requests")
+}
+
+model Quote {
+  id                String      @id @default(uuid()) @db.Uuid
+  onDemandRequestId String      @map("on_demand_request_id") @db.Uuid
+  sellerProfileId   String?     @map("seller_profile_id") @db.Uuid
+  quotedBy          String      @map("quoted_by") @db.Uuid
+  priceInCents      Int         @map("price_in_cents")
+  estimatedDays     Int         @map("estimated_days")
+  description       String?     @db.Text
+  validUntil        DateTime    @map("valid_until")
+  status            QuoteStatus @default(PENDING)
+  orderId           String?     @map("order_id") @db.Uuid
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  onDemandRequest OnDemandRequest @relation(fields: [onDemandRequestId], references: [id])
+  sellerProfile   SellerProfile?  @relation(fields: [sellerProfileId], references: [id])
+  quotedByUser    User            @relation("QuoteCreator", fields: [quotedBy], references: [id])
+  order           Order?          @relation(fields: [orderId], references: [id])
+
+  @@index([onDemandRequestId], name: "idx_quotes_request")
+  @@map("quotes")
+}
+
+model Return {
+  id                  String       @id @default(uuid()) @db.Uuid
+  returnNumber        String       @unique @map("return_number") @db.VarChar(30)
+  orderId             String       @map("order_id") @db.Uuid
+  orderItemId         String?      @map("order_item_id") @db.Uuid
+  userId              String       @map("user_id") @db.Uuid
+  reason              ReturnReason
+  description         String?      @db.Text
+  evidenceImages      Json?        @map("evidence_images") @db.JsonB
+  status              ReturnStatus @default(REQUESTED)
+  resolution          Resolution?
+  refundAmountInCents Int?         @map("refund_amount_in_cents")
+  resolvedBy          String?      @map("resolved_by") @db.Uuid
+  resolvedAt          DateTime?    @map("resolved_at")
+  adminNotes          String?      @map("admin_notes") @db.Text
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  order     Order      @relation(fields: [orderId], references: [id])
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+  user      User       @relation("ReturnRequester", fields: [userId], references: [id])
+  resolver  User?      @relation("ReturnResolver", fields: [resolvedBy], references: [id])
+
+  @@index([orderId], name: "idx_returns_order")
+  @@index([status], name: "idx_returns_status")
+  @@map("returns")
+}
+
+model Dispute {
+  id                String        @id @default(uuid()) @db.Uuid
+  disputeNumber     String        @unique @map("dispute_number") @db.VarChar(30)
+  orderId           String        @map("order_id") @db.Uuid
+  raisedBy          String        @map("raised_by") @db.Uuid
+  againstSellerId   String?       @map("against_seller_id") @db.Uuid
+  type              DisputeType
+  description       String        @db.Text
+  evidence          Json?         @db.JsonB
+  status            DisputeStatus @default(OPEN)
+  resolutionSummary String?       @map("resolution_summary") @db.Text
+  resolvedBy        String?       @map("resolved_by") @db.Uuid
+  resolvedAt        DateTime?     @map("resolved_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  order         Order          @relation(fields: [orderId], references: [id])
+  raiser        User           @relation("DisputeRaiser", fields: [raisedBy], references: [id])
+  againstSeller SellerProfile? @relation(fields: [againstSellerId], references: [id])
+  resolver      User?          @relation("DisputeResolver", fields: [resolvedBy], references: [id])
+
+  @@index([orderId], name: "idx_disputes_order")
+  @@index([status], name: "idx_disputes_status")
+  @@map("disputes")
+}
+
+model Rating {
+  id              String   @id @default(uuid()) @db.Uuid
+  orderItemId     String   @map("order_item_id") @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  sellerProfileId String   @map("seller_profile_id") @db.Uuid
+  productId       String   @map("product_id") @db.Uuid
+  score           Int      @db.SmallInt
+  review          String?  @db.Text
+  isVisible       Boolean  @default(true) @map("is_visible")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@unique([orderItemId, userId], name: "uq_rating_per_item_user")
+  @@index([sellerProfileId], name: "idx_ratings_seller")
+  @@index([productId], name: "idx_ratings_product")
+  @@map("ratings")
+}
+
+model WarehouseItem {
+  id              String              @id @default(uuid()) @db.Uuid
+  orderItemId     String              @unique @map("order_item_id") @db.Uuid
+  sellerProfileId String?             @map("seller_profile_id") @db.Uuid
+  status          WarehouseItemStatus @default(AWAITING_ARRIVAL)
+  receivedAt      DateTime?           @map("received_at")
+  dispatchedAt    DateTime?           @map("dispatched_at")
+  trackingNumber  String?             @map("tracking_number") @db.VarChar(100)
+  shippingCarrier String?             @map("shipping_carrier") @db.VarChar(50)
+  notes           String?             @db.Text
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  orderItem     OrderItem      @relation(fields: [orderItemId], references: [id])
+  sellerProfile SellerProfile? @relation(fields: [sellerProfileId], references: [id])
+
+  qcRecords QcRecord[]
+
+  @@index([status], name: "idx_warehouse_items_status")
+  @@map("warehouse_items")
+}
+
+model QcRecord {
+  id              String   @id @default(uuid()) @db.Uuid
+  warehouseItemId String   @map("warehouse_item_id") @db.Uuid
+  inspectedBy     String   @map("inspected_by") @db.Uuid
+  result          QcResult
+  checklist       Json     @db.JsonB
+  defectNotes     String?  @map("defect_notes") @db.Text
+  defectImages    Json?    @map("defect_images") @db.JsonB
+  inspectedAt     DateTime @map("inspected_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  warehouseItem WarehouseItem @relation(fields: [warehouseItemId], references: [id])
+  inspector     User          @relation(fields: [inspectedBy], references: [id])
+
+  @@index([warehouseItemId], name: "idx_qc_records_warehouse")
+  @@map("qc_records")
+}
+
+model Payout {
+  id                      String       @id @default(uuid()) @db.Uuid
+  payoutNumber            String       @unique @map("payout_number") @db.VarChar(30)
+  sellerProfileId         String       @map("seller_profile_id") @db.Uuid
+  cycleStart              DateTime     @map("cycle_start") @db.Date
+  cycleEnd                DateTime     @map("cycle_end") @db.Date
+  totalOrderValueInCents  Int          @map("total_order_value_in_cents")
+  commissionAmountInCents Int          @map("commission_amount_in_cents")
+  adjustmentAmountInCents Int          @default(0) @map("adjustment_amount_in_cents")
+  netPayoutInCents        Int          @map("net_payout_in_cents")
+  status                  PayoutStatus @default(DRAFT)
+  approvedBy              String?      @map("approved_by") @db.Uuid
+  paidAt                  DateTime?    @map("paid_at")
+  paymentReference        String?      @map("payment_reference") @db.VarChar(255)
+  notes                   String?      @db.Text
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+  approver      User?         @relation("PayoutApprover", fields: [approvedBy], references: [id])
+
+  lineItems PayoutLineItem[]
+  penalties SellerPenalty[]   @relation("PenaltyPayout")
+
+  @@index([sellerProfileId], name: "idx_payouts_seller")
+  @@index([status], name: "idx_payouts_status")
+  @@map("payouts")
+}
+
+model PayoutLineItem {
+  id                      String   @id @default(uuid()) @db.Uuid
+  payoutId                String   @map("payout_id") @db.Uuid
+  orderItemId             String   @map("order_item_id") @db.Uuid
+  orderNumber             String   @map("order_number") @db.VarChar(30)
+  itemAmountInCents       Int      @map("item_amount_in_cents")
+  commissionAmountInCents Int      @map("commission_amount_in_cents")
+  adjustmentAmountInCents Int      @default(0) @map("adjustment_amount_in_cents")
+  adjustmentReason        String?  @map("adjustment_reason") @db.VarChar(255)
+  netAmountInCents        Int      @map("net_amount_in_cents")
+  createdAt               DateTime @default(now()) @map("created_at")
+
+  payout    Payout    @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([payoutId], name: "idx_payout_line_items_payout")
+  @@map("payout_line_items")
+}
+
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String?  @map("user_id") @db.Uuid
+  action        String   @db.VarChar(100)
+  auditableType String   @map("auditable_type") @db.VarChar(100)
+  auditableId   String   @map("auditable_id") @db.Uuid
+  oldValues     Json?    @map("old_values") @db.JsonB
+  newValues     Json?    @map("new_values") @db.JsonB
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(500)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([auditableType, auditableId], name: "idx_audit_logs_auditable")
+  @@index([action], name: "idx_audit_logs_action")
+  @@index([createdAt], name: "idx_audit_logs_created")
+  @@map("audit_logs")
+}
+
+// ─── PHASE 2 MODELS ────────────────────────────────────
+
+model SellerPerformanceMetrics {
+  id                 String   @id @default(uuid()) @db.Uuid
+  sellerProfileId    String   @unique @map("seller_profile_id") @db.Uuid
+  avgRating          Int      @default(0) @map("avg_rating")
+  totalOrders        Int      @default(0) @map("total_orders")
+  qcPassRate         Int      @default(0) @map("qc_pass_rate")
+  onTimeDeliveryRate Int      @default(0) @map("on_time_delivery_rate")
+  returnRate         Int      @default(0) @map("return_rate")
+  disputeRate        Int      @default(0) @map("dispute_rate")
+  violationsCount    Int      @default(0) @map("violations_count")
+  lastCalculatedAt   DateTime @map("last_calculated_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+
+  @@map("seller_performance_metrics")
+}
+
+model SlaRecord {
+  id              String    @id @default(uuid()) @db.Uuid
+  slaType         SlaType   @map("sla_type")
+  referenceType   String    @map("reference_type") @db.VarChar(100)
+  referenceId     String    @map("reference_id") @db.Uuid
+  sellerProfileId String?   @map("seller_profile_id") @db.Uuid
+  targetHours     Int       @map("target_hours")
+  startedAt       DateTime  @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  isBreached      Boolean   @default(false) @map("is_breached")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  sellerProfile SellerProfile? @relation(fields: [sellerProfileId], references: [id])
+
+  @@index([slaType, isBreached], name: "idx_sla_records_type_breach")
+  @@index([sellerProfileId], name: "idx_sla_records_seller")
+  @@map("sla_records")
+}
+
+model SellerPenalty {
+  id              String        @id @default(uuid()) @db.Uuid
+  sellerProfileId String        @map("seller_profile_id") @db.Uuid
+  type            PenaltyType
+  amountInCents   Int           @map("amount_in_cents")
+  description     String        @db.Text
+  payoutId        String?       @map("payout_id") @db.Uuid
+  status          PenaltyStatus @default(PENDING)
+  createdBy       String        @map("created_by") @db.Uuid
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+  payout        Payout?       @relation("PenaltyPayout", fields: [payoutId], references: [id])
+  creator       User          @relation("PenaltyCreator", fields: [createdBy], references: [id])
+
+  @@index([sellerProfileId], name: "idx_seller_penalties_seller")
+  @@index([status], name: "idx_seller_penalties_status")
+  @@map("seller_penalties")
+}
+
+// ─── PHASE 3 MODELS ────────────────────────────────────
+
+model Tender {
+  id                String       @id @default(uuid()) @db.Uuid
+  onDemandRequestId String?      @map("on_demand_request_id") @db.Uuid
+  title             String       @db.VarChar(255)
+  description       String       @db.Text
+  budgetLimitCents  Int?         @map("budget_limit_cents")
+  deadline          DateTime
+  status            TenderStatus @default(OPEN)
+  awardedTo         String?      @map("awarded_to") @db.Uuid
+  createdBy         String       @map("created_by") @db.Uuid
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+
+  onDemandRequest OnDemandRequest? @relation(fields: [onDemandRequestId], references: [id])
+  winner          SellerProfile?   @relation("TenderWinner", fields: [awardedTo], references: [id])
+  creator         User             @relation("TenderCreator", fields: [createdBy], references: [id])
+
+  bids TenderBid[]
+
+  @@index([status], name: "idx_tenders_status")
+  @@map("tenders")
+}
+
+model TenderBid {
+  id              String          @id @default(uuid()) @db.Uuid
+  tenderId        String          @map("tender_id") @db.Uuid
+  sellerProfileId String          @map("seller_profile_id") @db.Uuid
+  priceInCents    Int             @map("price_in_cents")
+  estimatedDays   Int             @map("estimated_days")
+  proposal        String?         @db.Text
+  status          TenderBidStatus @default(SUBMITTED)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  tender        Tender        @relation(fields: [tenderId], references: [id])
+  sellerProfile SellerProfile @relation(fields: [sellerProfileId], references: [id])
+
+  @@unique([tenderId, sellerProfileId], name: "uq_tender_bid_seller")
+  @@map("tender_bids")
+}
+
+model SellerTrustTier {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String   @db.VarChar(50)
+  minOrders      Int      @map("min_orders")
+  minRating      Int      @map("min_rating")
+  minQcPassRate  Int      @map("min_qc_pass_rate")
+  commissionRate Int      @map("commission_rate")
+  benefits       Json?    @db.JsonB
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sellers SellerProfile[]
+
+  @@map("seller_trust_tiers")
+}

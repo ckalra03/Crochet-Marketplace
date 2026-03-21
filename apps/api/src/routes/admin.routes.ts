@@ -4,6 +4,9 @@ import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
 import { fulfillmentService } from '../modules/fulfillment/fulfillment.service';
 import { onDemandService } from '../modules/on-demand/on-demand.service';
+import { returnService } from '../modules/returns/return.service';
+import { disputeService } from '../modules/disputes/dispute.service';
+import { reviewReturnSchema } from '@crochet-hub/shared';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
 import { z } from 'zod';
@@ -219,6 +222,48 @@ router.post(
     try {
       const item = await fulfillmentService.dispatchItem(req.params.id, req.user!.userId, req.body);
       res.json(item);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Returns ──────────────────────────────────────
+router.get('/returns', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await returnService.listAllReturns(req.query.status as string);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/returns/:id/review', validate(reviewReturnSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const ret = await returnService.reviewReturn(req.params.id, req.user!.userId, req.body);
+    res.json(ret);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Disputes ─────────────────────────────────────
+router.get('/disputes', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await disputeService.listAllDisputes(req.query.status as string);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/disputes/:id/resolve',
+  validate(z.object({ resolutionSummary: z.string().min(5) })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const dispute = await disputeService.resolveDispute(req.params.id, req.user!.userId, req.body);
+      res.json(dispute);
     } catch (err) {
       next(err);
     }

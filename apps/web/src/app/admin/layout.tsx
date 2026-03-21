@@ -8,8 +8,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen flex-col">
       <StorefrontNav />
       <div className="flex flex-1">
-        <DashboardSidebar items={adminSidebarItems} title="Admin Panel" />
-        <main className="flex-1 p-6">{children}</main>
+        <DashboardSidebar items={adminSidebarItems} title="Admin Panel" variant="dark" />
+        <main className="flex-1 p-6 bg-[#fafaf9]">{children}</main>
       </div>
     </div>
   );

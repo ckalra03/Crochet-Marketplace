@@ -3,84 +3,80 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useCartStore } from '@/lib/stores/cart-store';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, LogOut, Package, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Package, LayoutDashboard, Search } from 'lucide-react';
 
 export function StorefrontNav() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const itemCount = useCartStore((s) => s.itemCount);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="text-xl font-bold text-primary-600">
+    <header className="sticky top-0 z-50 w-full bg-[#fcf9f8]/80 backdrop-blur-xl border-b border-[#e7e5e4]/40 shadow-[0_4px_30px_rgba(162,56,44,0.04)]">
+      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-10">
+          <Link href="/" className="text-2xl font-black text-primary-600 tracking-tight">
             Crochet Hub
           </Link>
-          <nav className="hidden md:flex items-center gap-4 text-sm">
-            <Link href="/products" className="text-muted-foreground hover:text-foreground transition-colors">
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="/products" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
               Shop
             </Link>
-            <Link href="/categories" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/products" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
               Categories
             </Link>
-            <Link href="/on-demand/new" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/on-demand/new" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
               Custom Order
             </Link>
-          </nav>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <Link href="/cart">
-                <Button variant="ghost" size="icon" className="relative">
-                  <ShoppingCart className="h-5 w-5" />
-                  {itemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary-600 text-[10px] font-bold text-white flex items-center justify-center">
-                      {itemCount}
-                    </span>
-                  )}
-                </Button>
+              <Link href="/cart" className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                    {itemCount}
+                  </span>
+                )}
               </Link>
-              <Link href="/orders">
-                <Button variant="ghost" size="icon">
-                  <Package className="h-5 w-5" />
-                </Button>
+              <Link href="/orders" className="p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
+                <Package className="h-5 w-5" />
               </Link>
               {user?.role === 'SELLER' && (
-                <Link href="/seller">
-                  <Button variant="ghost" size="sm">Seller Dashboard</Button>
+                <Link href="/seller" className="text-sm font-medium text-[#1c1b1b] hover:text-primary-600 transition-colors hidden md:block">
+                  Seller Dashboard
                 </Link>
               )}
               {user?.role === 'ADMIN' && (
-                <Link href="/admin">
-                  <Button variant="ghost" size="sm">
-                    <LayoutDashboard className="h-4 w-4 mr-1" /> Admin
-                  </Button>
+                <Link href="/admin" className="flex items-center gap-1 text-sm font-medium text-[#1c1b1b] hover:text-primary-600 transition-colors hidden md:block">
+                  <LayoutDashboard className="h-4 w-4" /> Admin
                 </Link>
               )}
-              <Link href="/profile">
-                <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Button variant="ghost" size="icon" onClick={() => { logout(); window.location.href = '/'; }}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+              <div className="border-l border-[#e7e5e4] pl-4 ml-2 flex items-center gap-3">
+                <Link href="/profile" className="w-9 h-9 rounded-full bg-primary-600/10 flex items-center justify-center text-primary-600 font-bold text-sm hover:bg-primary-600/20 transition-colors">
+                  {user?.name?.charAt(0) || 'U'}
+                </Link>
+                <button onClick={() => { logout(); window.location.href = '/'; }}
+                  className="p-2 text-[#78716c] hover:text-red-500 transition-colors">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
             </>
           ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">Login</Button>
+            <div className="flex items-center gap-3">
+              <Link href="/login" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors text-sm">
+                Login
               </Link>
               <Link href="/register">
-                <Button size="sm">Sign Up</Button>
+                <button className="bg-primary-600 text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-primary-700 transition-all active:scale-95 shadow-lg shadow-primary-600/20">
+                  Sign Up
+                </button>
               </Link>
-            </>
+            </div>
           )}
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

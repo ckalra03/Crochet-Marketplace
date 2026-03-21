@@ -28,6 +28,21 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Root route
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'Crochet Hub API',
+    version: '0.1.0',
+    status: 'running',
+    docs: {
+      health: '/health',
+      api: '/api/v1',
+      catalog: '/api/v1/catalog/products',
+      categories: '/api/v1/catalog/categories',
+    },
+  });
+});
+
 // Health check
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

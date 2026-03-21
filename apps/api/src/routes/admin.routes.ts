@@ -7,12 +7,38 @@ import { onDemandService } from '../modules/on-demand/on-demand.service';
 import { returnService } from '../modules/returns/return.service';
 import { disputeService } from '../modules/disputes/dispute.service';
 import { payoutService } from '../modules/seller-finance/payout.service';
+import { adminDashboardService } from '../modules/dashboard/admin-dashboard.service';
 import { reviewReturnSchema } from '@crochet-hub/shared';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
 import { z } from 'zod';
 
 const router = Router();
+
+// ─── Dashboard ─────────────────────────────────────
+router.get('/dashboard', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const stats = await adminDashboardService.getDashboardStats();
+    res.json(stats);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/audit-logs', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await adminDashboardService.getAuditLogs({
+      action: req.query.action as string,
+      userId: req.query.userId as string,
+      auditableType: req.query.auditableType as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 50,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Seller Management ─────────────────────────────
 router.get('/sellers', async (req: Request, res: Response, next: NextFunction) => {

@@ -1,7 +1,9 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { orderService } from '../modules/orders/order.service';
+import { ratingService } from '../modules/ratings/rating.service';
 import { validate } from '../middleware/validate';
 import { cancelOrderSchema } from '@crochet-hub/shared';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -35,6 +37,20 @@ router.post(
     try {
       const order = await orderService.cancelOrder(req.params.orderNumber, req.user!.userId, req.body.reason);
       res.json(order);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Ratings ──────────────────────────────────────
+router.post(
+  '/:orderNumber/items/:itemId/rating',
+  validate(z.object({ score: z.number().int().min(1).max(5), review: z.string().max(1000).optional() })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const rating = await ratingService.submitRating(req.user!.userId, req.params.itemId, req.body);
+      res.status(201).json(rating);
     } catch (err) {
       next(err);
     }

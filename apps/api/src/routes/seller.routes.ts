@@ -3,6 +3,7 @@ import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
 import { payoutService } from '../modules/seller-finance/payout.service';
+import { ratingService } from '../modules/ratings/rating.service';
 import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
@@ -56,6 +57,17 @@ router.put(
     }
   },
 );
+
+// ─── Ratings ───────────────────────────────────────
+router.get('/ratings', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const result = await ratingService.getSellerRatings(profile.id);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Payouts ───────────────────────────────────────
 router.get('/payouts', async (req: Request, res: Response, next: NextFunction) => {

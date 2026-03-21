@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
+import { orderService } from '../modules/orders/order.service';
 import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
@@ -54,6 +55,21 @@ router.put(
     }
   },
 );
+
+// ─── Order Allocations ─────────────────────────────
+router.get('/orders', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const result = await orderService.listSellerOrders(
+      profile.id,
+      Number(req.query.page) || 1,
+      Number(req.query.limit) || 20,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Product Management ────────────────────────────
 router.get('/products', async (req: Request, res: Response, next: NextFunction) => {

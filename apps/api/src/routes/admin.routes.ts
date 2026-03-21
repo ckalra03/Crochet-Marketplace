@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
+import { orderService } from '../modules/orders/order.service';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
 import { z } from 'zod';
@@ -94,6 +95,47 @@ router.post(
     try {
       const product = await productService.rejectProduct(req.params.id, req.user!.userId, req.body.reason);
       res.json(product);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Order Management ──────────────────────────────
+router.get('/orders', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await orderService.listAllOrders({
+      status: req.query.status as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/orders/:orderNumber', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const order = await orderService.getOrderByNumber(req.params.orderNumber);
+    res.json(order);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/orders/:orderNumber/update-status',
+  validate(z.object({ status: z.string(), notes: z.string().optional() })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const order = await orderService.updateOrderStatus(
+        req.params.orderNumber,
+        req.user!.userId,
+        req.body.status,
+        req.body.notes,
+      );
+      res.json(order);
     } catch (err) {
       next(err);
     }

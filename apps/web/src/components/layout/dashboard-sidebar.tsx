@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { LayoutDashboard, Package, ShoppingBag, CreditCard, Star, UserCircle, Settings, Users, ClipboardCheck, Truck, AlertTriangle, FileText, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, CreditCard, Star, UserCircle, Users, ClipboardCheck, Truck, AlertTriangle, FileText, BarChart3 } from 'lucide-react';
 
 interface SidebarItem {
   label: string;
@@ -14,30 +14,44 @@ interface SidebarItem {
 interface DashboardSidebarProps {
   items: SidebarItem[];
   title: string;
+  variant?: 'light' | 'dark';
 }
 
-export function DashboardSidebar({ items, title }: DashboardSidebarProps) {
+export function DashboardSidebar({ items, title, variant = 'light' }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const isDark = variant === 'dark';
 
   return (
-    <aside className="w-64 min-h-screen border-r bg-muted/30 p-4 hidden lg:block">
-      <h2 className="font-bold text-lg mb-6 px-3 text-primary-600">{title}</h2>
+    <aside className={cn(
+      'w-64 min-h-screen p-5 hidden lg:block border-r',
+      isDark ? 'bg-[#292524] border-[#3a3533]' : 'bg-white/50 border-[#e7e5e4]'
+    )}>
+      <h2 className={cn('font-black text-lg mb-8 px-3 tracking-tight', isDark ? 'text-white' : 'text-primary-600')}>
+        {title}
+      </h2>
       <nav className="space-y-1">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-              pathname === item.href
-                ? 'bg-primary-50 text-primary-700 font-medium'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </Link>
-        ))}
+        {items.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200',
+                isDark
+                  ? isActive
+                    ? 'bg-primary-600/20 text-primary-400 font-semibold border-l-2 border-primary-500 ml-[-1px]'
+                    : 'text-[#a8a29e] hover:text-white hover:bg-white/5'
+                  : isActive
+                    ? 'bg-primary-50 text-primary-700 font-semibold border-l-2 border-primary-600 ml-[-1px]'
+                    : 'text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1b1b]',
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Crochet Hub | The Artisanal Digital Atelier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed-variant": "#4b4641",
+              "primary": "#a2382c",
+              "on-primary-fixed-variant": "#85231a",
+              "on-tertiary": "#ffffff",
+              "tertiary": "#615b56",
+              "surface-container": "#f0eded",
+              "on-surface": "#1c1b1b",
+              "tertiary-fixed-dim": "#cec5bf",
+              "tertiary-container": "#7a736e",
+              "outline": "#8a716e",
+              "on-background": "#1c1b1b",
+              "error": "#ba1a1a",
+              "secondary-fixed-dim": "#ffb77f",
+              "secondary-fixed": "#ffdcc3",
+              "on-error": "#ffffff",
+              "surface": "#fcf9f8",
+              "on-surface-variant": "#57423f",
+              "on-secondary-fixed": "#2f1500",
+              "primary-fixed": "#ffdad5",
+              "primary-container": "#c25042",
+              "secondary": "#914c00",
+              "on-secondary-fixed-variant": "#6f3900",
+              "on-error-container": "#93000a",
+              "surface-container-highest": "#e5e2e1",
+              "outline-variant": "#dec0bb",
+              "on-primary": "#ffffff",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fcf9f8",
+              "on-secondary-container": "#673400",
+              "on-tertiary-container": "#fffbff",
+              "primary-fixed-dim": "#ffb4a9",
+              "on-tertiary-fixed": "#1f1b17",
+              "surface-variant": "#e5e2e1",
+              "surface-tint": "#a53a2e",
+              "on-primary-fixed": "#410001",
+              "surface-container-low": "#f6f3f2",
+              "inverse-surface": "#313030",
+              "secondary-container": "#fc9434",
+              "on-primary-container": "#fffbff",
+              "surface-container-high": "#eae7e7",
+              "surface-bright": "#fcf9f8",
+              "on-secondary": "#ffffff",
+              "inverse-on-surface": "#f3f0ef",
+              "surface-dim": "#dcd9d9",
+              "inverse-primary": "#ffb4a9",
+              "error-container": "#ffdad6",
+              "tertiary-fixed": "#eae1da"
+            },
+            fontFamily: {
+              "headline": ["Inter", "sans-serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body { font-family: 'Inter', sans-serif; background-color: #fcf9f8; }
+      .glass-nav { background: rgba(252, 249, 248, 0.8); backdrop-filter: blur(20px); }
+    </style>
+</head>
+<body class="text-on-surface">
+<!-- STICKY NAV BAR -->
+<header class="fixed top-0 left-0 w-full z-50 bg-[#fcf9f8]/80 dark:bg-stone-950/80 backdrop-blur-xl border-b border-[#dec0bb]/15 shadow-[0px_10px_30px_rgba(162,56,44,0.04)]">
+<nav class="flex justify-between items-center w-full px-6 py-4 max-w-7xl mx-auto font-inter text-base tracking-tight">
+<div class="flex items-center gap-10">
+<a class="text-2xl font-black text-[#da6152] tracking-tighter" href="#">Crochet Hub</a>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-[#da6152] font-semibold border-b-2 border-[#da6152] pb-1" href="#">Shop</a>
+<a class="text-[#1c1b1b] dark:text-stone-200 font-medium hover:text-[#da6152] transition-colors duration-300" href="#">Categories</a>
+<a class="text-[#1c1b1b] dark:text-stone-200 font-medium hover:text-[#da6152] transition-colors duration-300" href="#">Custom Order</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container-high rounded-full px-4 py-2 gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-xl">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48" placeholder="Search crafts..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute -top-1 -right-1 bg-primary text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">3</span>
+</button>
+<div class="hidden md:flex items-center gap-3 border-l border-outline-variant pl-4">
+<button class="text-on-surface font-medium hover:text-primary transition-colors">Login</button>
+<button class="bg-primary text-on-primary px-5 py-2 rounded-full font-semibold hover:bg-primary-container transition-all active:scale-95">Sign Up</button>
+</div>
+<button class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-fixed">
+<img class="w-full h-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3mVO-cRAmM7s4TJ_AnjjCa0MWZtiTKRAR3zNqLCiaI9EQ39Yp5o_-7qehinfY0pM4Hzo9e6MaDaX4jUZYdH-cPJIYeI5LnN6X5N3Ii5ES6wn0NN6wiWr1MYjvjJRw5wI6KqS24pqi7oBfCFhDJjdek3TOskAlRSLOxjHObOjB4y8pIvUPUXC-Xub9h2v8fzC6o54gohCtVb46L3ZTgtePMXp2FN4Pii1WKOW05W6544syDIT_Ak0c1739ZonBOsQ_4mR1_1YV8A"/>
+</button>
+</div>
+</div>
+</nav>
+</header>
+<main class="pt-20">
+<!-- HERO SECTION -->
+<section class="relative min-h-[870px] flex items-center overflow-hidden px-6 lg:px-12 bg-gradient-to-br from-[#ffdad5] via-[#fcf9f8] to-[#fcf9f8]">
+<div class="max-w-7xl mx-auto w-full grid lg:grid-cols-2 gap-12 items-center">
+<div class="z-10">
+<span class="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">Handcrafted with Heart</span>
+<h1 class="text-5xl lg:text-7xl font-extrabold text-on-surface leading-[1.1] mb-8 tracking-tighter">
+                        Discover Unique <span class="text-[#da6152]">Crochet</span> Creations
+                    </h1>
+<p class="text-lg lg:text-xl text-on-surface-variant max-w-lg mb-10 leading-relaxed">
+                        Curated collection of quality-assured handmade products. From cozy blankets to charming amigurumi, find pieces that speak to your tactile soul.
+                    </p>
+<div class="flex flex-wrap gap-4">
+<button class="px-8 py-4 bg-primary text-on-primary rounded-full font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform">Shop Now</button>
+<button class="px-8 py-4 border-2 border-primary text-primary rounded-full font-bold text-lg flex items-center gap-2 hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                            Custom Order
+                        </button>
+</div>
+</div>
+<div class="relative h-[500px] lg:h-[600px] flex items-center justify-center">
+<!-- Floating Items -->
+<div class="absolute top-10 right-0 w-64 h-80 rounded-2xl shadow-2xl overflow-hidden rotate-6 z-20 border-8 border-white">
+<img class="w-full h-full object-cover" data-alt="Handmade crochet teddy bear plushie" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCYRPOMw5HyjlU9pwbL73q6eriVms3UmJYDWZNuYZEy0L7_ZaAw163v7OUFKMur9ezgQvTJByjBOFhAOqtW1l_Euo7CBh4L-Hi4jhxZueaLGyEii5IMGx3OZwSVNSFmnIgy12qGMehkCokytF4Ou7CI2aFPrBgptxI65D8MzHYKlwNyelR8m72XSEVW-4qEoBbDLb0AOugFutigPliQk2Lpo5-eyBL7wIpOmZUREqc98_kj9x5dNcMtvvzzmIwUnFtJCchmec3lCg"/>
+</div>
+<div class="absolute bottom-0 left-0 w-72 h-72 rounded-2xl shadow-2xl overflow-hidden -rotate-6 z-10 border-8 border-white">
+<img class="w-full h-full object-cover" data-alt="Chunky crochet knit blanket texture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf69Fd_UWH_ih8KiboeMmARf-pL_wXnteYisaG8WGP-oP59HYzDDkqJtFc-HURZ9a4GvntRDY9CR7huzG0O78VfUWBQ9QIp1ZLODtp962TtNAp652pi8cKYqjo_rmADZaoZkEq0UkaGIHhNxlLMqmgWsc3E2iwYu5O03prpOEGHHtlzq5JT14DFf4FjHAAFTHMIsWJrPkxn2OTgpyfdEmMq9klEe_YSqr-daYafRl2WMncM-ehbGRqC9iZ3pxK3NM2HPL2Jpy0VA"/>
+</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-[450px] rounded-3xl shadow-2xl overflow-hidden z-30 border-8 border-white">
+<img class="w-full h-full object-cover" data-alt="Bohemian crochet shoulder bag with intricate patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBabC5Ow8VdShw6irvUKJ5XEOS3xyo47HPbKV0ICCO-QYgidu2pXM_RtTz39ohB2LXv6Og67TRTGqczHXwqgbpgkI0kJUWpes9SFrhhNWIu1Q5lNX8WuzjjbBfkVhhhyTAmgbhXhyf0EgBcMVPPrF5O3TSur_qCDy_BctrM_FbDJ48qDKTvD4asMVEpgrn4dnWwx-wPZ3KyznZiE2eFRlMoqF4TkIzFabgDSueXBTC4A4KO-X1F7B-nDp_F_3daBwMRNk5itKJSLg"/>
+</div>
+</div>
+</div>
+</section>
+<!-- TRUST BADGES -->
+<section class="py-12 bg-surface-container">
+<div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="flex items-center gap-4 p-6 bg-surface rounded-xl shadow-sm">
+<div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl">verified_user</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Quality Assured</h3>
+<p class="text-sm text-on-surface-variant">Each item inspected by experts</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-6 bg-surface rounded-xl shadow-sm">
+<div class="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl">local_shipping</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Managed Shipping</h3>
+<p class="text-sm text-on-surface-variant">Secure &amp; trackable logistics</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-6 bg-surface rounded-xl shadow-sm">
+<div class="w-14 h-14 rounded-full bg-tertiary/10 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-3xl">workspace_premium</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Curated Artisans</h3>
+<p class="text-sm text-on-surface-variant">Vetted community of creators</p>
+</div>
+</div>
+</div>
+</section>
+<!-- CATEGORY CARDS -->
+<section class="py-24 max-w-7xl mx-auto px-6">
+<h2 class="text-3xl font-extrabold text-on-surface mb-12 flex items-center gap-4">
+                Browse by Category
+                <div class="h-px flex-1 bg-outline-variant/30"></div>
+</h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-6">
+<!-- Card 1 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#f8ede3] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Collection of colorful amigurumi animals" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSMMN_aWLJ2XLFIaViB4-gJdkqBovjP9v1YBmTSRuY5JQ6IxjKgW11FmLt22mrRgpNaDmYkkFZxrMO9ezHNr2zaF570bEDqZWBMpQCE1NPOqdmMyEO_axpc90WgOSvqU-xql-btKuMzs-xQ8H2ZT4M5-lp-GZDrfPE8RcOGTFSQSZANUdVyPHuyaxGD7Nrbq4vLEFDVuE-kF3aRj0SE7XRA-I6U01A9s5_EqR9qMboGqQmrC2FpvPYwRNTmrP3YpJv8x__XDy1Qg"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Amigurumi</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">124 Items</span>
+</a>
+<!-- Card 2 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#e3f2fd] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Stacked cozy crochet blankets in neutral tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjdgo0apYiPYzMf9B2e-u1xWtSUkCpF7MiBi2lJrpcdIUu1CFcQklXb9jFKY7JhNCVHzgWadyioKV4dQtfpbn5_wsFVdApmZJOfPxwoP9bx8eMYTsqTeyHkz09DtrghYMyESoAX2PUVJY_ZuOT2WXZHgq0hHJsvhsklcSama77F6z_4zQWGQBv467-LN3l633I1t2TB2bb05ZqVnO4dmUCI88fi5Ew3RY_D7J0UCMQoRzPdJHaKwEkjCRVsoa-gC8hg5IIA7QEHg"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Blankets</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">56 Items</span>
+</a>
+<!-- Card 3 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#f3e5f5] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Handcrafted crochet tote bag with wooden handles" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZC-fVldh4VoRYzmd7f7mm9rkV2XPVkoL0MLmqOvgTLmWnWiWC_RQQZ5UfFDTftQidpbk1Inzj1JANOIuovaKVYjoj7CpEJ2oDJip_vhiOnvXCtlCb3zu2egd6Akw04GmaU5E6ZYmC8l7Z3zeygeBjd-R1SHD6WzXz3jUlMSGgwjTDkJuijVoEEYIDiPPK9gSFmZELgxZFgxO91iBSBGY_yfVUMv-N6aS8_7gxZdPTvpjcocF22C6-wzSLCMA8c0lCKdE51nbpaw"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Bags</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">89 Items</span>
+</a>
+<!-- Card 4 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#fffde7] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Crochet plant pot covers and home coasters" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi_bJk8Ez5A2RU1yLq7IiYHlbPeqBcPc95pRqYy_ciiN7ukLPy8DicuQ9vBefzoXopPeNrYfFVMcbFKejInqihKCNbbKzLaBKqVOvoxLDUh7tNi-WKPIR9AfbhFpmqG0bvgIcvQlb9GuADU1spSSeYY8oFCXhCrk-12ZyO-VTi-9FKyLvR482m04Uxe49RJ1nYzW6eK7H9rIG05ERDnBBp8MdtGtlMUWpRDnYMRcZtITc87k6HZJBuQXPqCWsCK8KE4SkKI8uv-A"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Home Decor</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">42 Items</span>
+</a>
+<!-- Card 5 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#e0f2f1] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Baby crochet booties and tiny hat set" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOSEkSTHAT6cJdlMyipVeGa9TWgaDiVeQBo0hSO5Il8cAPST1z-i4B0HtPQ05S8mKO_1EnZS3pAtFZtJnp2mdWpwdq5o6i-AKGC60hTtZtto0UDsxhwEy6jFdRB9Xpu6r8j1OcUnrKJaO5pyPptioM_1-iTEZtm2ytZNA8kIYzvWMRszLh5prsL8O2AETUsF7QFNEXpPpy49Su3foS_4sAjsUiekyYfS_87n0O0nAHNRj2cQT_9GpkVsaDNQbxX-BpT4To5dWddA"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Baby &amp; Kids</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">210 Items</span>
+</a>
+<!-- Card 6 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#fff3e0] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Crochet cardigan with detailed stitching" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJ81eMZoj3xEBSnYBiozbcaZUGNrb5TlPn05OrHs3l9ryIyBE2n5pSP6rViDRCRThTkvHfpAf5_IYoWXxn5lKJyb7xgRj8YXb2V4iJGWPAyP-Kqy56nFsnb3-2VoQX1JHV81NObUOIQ_Nqah0Pqk0kSlQLX8M0JhZ6Mh09M50EtN973u7EJv45EgMUKXmolKbTHJwHHthIElQPj9tuP8jWm-p-nAQq3WH6UZPbEAUO591H1uGXB5A-Z2VmMeMFMseQtMizLQhKLQ"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Clothing</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">75 Items</span>
+</a>
+<!-- Card 7 -->
+<a class="group flex flex-col items-center text-center" href="#">
+<div class="w-full aspect-square rounded-xl bg-[#eceff1] mb-4 overflow-hidden shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
+<img class="w-full h-full object-cover" data-alt="Holiday themed crochet ornaments and pumpkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTftiMfiea7i203FusQuuqHm5aHVhy1JA29QRp93bsdT-7n6jOEcu7XHxLP4EJVEISVOOVZgZRNV8xpANCXUxAPVnFje2SPWU0KWYjALldDOuxwwc_r_xVU1XVBOaS5qsPRsFyFY0fLSk3AuZivkYtNp41gJbhLQhEcLVnFQESdlKPlID9VQJEEkvkqZu9QwLXPFdWCx5bMzgBhzdLbfvrx56F7mIbIZwG9mpDYVf0Oz-J8TCd_tOeoig1zyCwu8sXiktUUKvHDA"/>
+</div>
+<span class="font-bold text-on-surface group-hover:text-primary transition-colors">Seasonal</span>
+<span class="text-xs text-on-surface-variant uppercase tracking-wider mt-1">33 Items</span>
+</a>
+</div>
+</section>
+<!-- FEATURED PRODUCTS -->
+<section class="py-24 bg-surface-container-low">
+<div class="max-w-7xl mx-auto px-6">
+<div class="flex justify-between items-end mb-12">
+<div>
+<h2 class="text-3xl font-extrabold text-on-surface mb-2">Featured Products</h2>
+<p class="text-on-surface-variant">Our most loved hand-stitched treasures</p>
+</div>
+<a class="text-primary font-bold flex items-center gap-1 group" href="#">
+                        View All
+                        <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_right_alt</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+<!-- Product 1 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+<div class="relative aspect-[4/5]">
+<img class="w-full h-full object-cover" data-alt="Cuddly crochet brown bear toy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbSKaOXBYr5LiWAkLU7I9QiHsBAOn_e7Q5z-rPM_kByU6zwp5dveyAWX7zxiAYCmRH6-2cEwwvJ8ZE5FKoseVlt3SYzM2bSIjjv2KMM9_MnMsomKrLiIu81K_cMfTOva6rL272VaZw6t8GFQ7vR8AxghtbsOHsXDdRmvu4_-Ecj9sjHW977ww5JnkCDJqhfVRkgxbKdOSRK8NT8mdIsiNH2S5Y53vt9LT_fKi3X_WCsqo6ifQeFkj7uy-93XH0PDa-0UJHALrKmA"/>
+<span class="absolute top-4 left-4 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Ready Stock</span>
+<button class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<span class="text-xs text-on-surface-variant/70 font-medium">By Threads &amp; Tales</span>
+<h3 class="font-bold text-lg text-on-surface mb-3 mt-1 group-hover:text-primary transition-colors">Hand-knit Teddy Bear</h3>
+<div class="flex justify-between items-center">
+<span class="text-xl font-black text-primary">₹899</span>
+<button class="p-2 bg-primary/5 text-primary rounded-lg hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product 2 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+<div class="relative aspect-[4/5]">
+<img class="w-full h-full object-cover" data-alt="Multicolor rainbow crochet blanket for nurseries" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZ5JIhgSf7Ga0kkXgUkMRmIDNrKrW2FnP1RMXTXNaJEILAfW3CA699CJEHIBeafstrbQyE1w16St1_v9tWbDh7F8SKEw6HVTLd2YVC8RNxQbmjX31jSxjJENjhNaOBISBJ3ECF4OsxFDSVnvUyjso70Dq0oCaFEZF1RT9aJ4_NUhnnosAM8n4lOdjKrmqY162KIk3vD5GA-6hwLDoLckPEvdUt5d4RdyiOpudeqD18g8RTb5H_rCyb-L8YOnOlSTXJyuIS6JGmnw"/>
+<span class="absolute top-4 left-4 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Made to Order</span>
+<button class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<span class="text-xs text-[#78716c] font-medium">By Cozy Knots</span>
+<h3 class="font-bold text-lg text-on-surface mb-3 mt-1 group-hover:text-primary transition-colors">Pastel Rainbow Blanket</h3>
+<div class="flex justify-between items-center">
+<span class="text-xl font-black text-primary">₹2,499</span>
+<button class="p-2 bg-primary/5 text-primary rounded-lg hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product 3 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+<div class="relative aspect-[4/5]">
+<img class="w-full h-full object-cover" data-alt="Cream colored boho crochet handbag" src="https://lh3.googleusercontent.com/aida-public/AB6AXuATM8hIhzbXVvN-0Skb7am9WxJuyxF4_U4mfFD8eZrWf0DJmAqfKg1hm8Jd8amW-pk3HfSKHkJcA4ee4zCKJ0R4u38OzEG45o33b4DvdHjRl_nRMCwCy8yBvBncWCy23GYkNdkfUVxYgZGaySLk8QwXd0FPdDcCo4kAJRgagPxXcAAPfz01FVQPBvJtXTG-pR3fVzKg5EzbN3lrkkByxDjP03faImhqupbC1REBxVYXx8k4Ic9ol3keAqg4QplHKBfkiG_e1ZxOzg"/>
+<span class="absolute top-4 left-4 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Ready Stock</span>
+<button class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<span class="text-xs text-[#78716c] font-medium">By Boho Vibes</span>
+<h3 class="font-bold text-lg text-on-surface mb-3 mt-1 group-hover:text-primary transition-colors">Artisanal Bohemian Tote</h3>
+<div class="flex justify-between items-center">
+<span class="text-xl font-black text-primary">₹1,250</span>
+<button class="p-2 bg-primary/5 text-primary rounded-lg hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product 4 -->
+<div class="group bg-surface-container-lowest rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-2">
+<div class="relative aspect-[4/5]">
+<img class="w-full h-full object-cover" data-alt="Geometric crochet wall hanging decor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnzE8LajGofEuJBtd8SDDXTf-PPmmLu9ppDZevjvzqTUw9L-6bCjKJpcxOl5PRVNY_TvIhpL6zRR9cmvO_azhG-5TCZLosIUxnli39sfwU_fRr0q8RCWA-zpoJqlvOxqowOEQhdbWVocEMivblTfEtAiThuvRYm5aoZdwsJquFKKlaPMAVBi8zgLSzM7dMNkxZrodDhBh9GI0xRHUy_-tXKQr0_ijRGf_q2bns1k6UVHjt7lNUB1qRqcK2YPeBFkP1f2Ng_2Zu0Q"/>
+<span class="absolute top-4 left-4 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full">Made to Order</span>
+<button class="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center text-primary shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-5">
+<span class="text-xs text-[#78716c] font-medium">By Modern Stitch</span>
+<h3 class="font-bold text-lg text-on-surface mb-3 mt-1 group-hover:text-primary transition-colors">Textured Wall Hanging</h3>
+<div class="flex justify-between items-center">
+<span class="text-xl font-black text-primary">₹1,899</span>
+<button class="p-2 bg-primary/5 text-primary rounded-lg hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- SELLER CTA -->
+<section class="relative py-24 px-6 overflow-hidden">
+<div class="max-w-7xl mx-auto bg-primary rounded-[2rem] px-8 py-20 text-center relative z-10 overflow-hidden shadow-2xl">
+<!-- Abstract Pattern Overlays -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3"></div>
+<div class="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/3"></div>
+<h2 class="text-4xl md:text-5xl font-extrabold text-white mb-6 relative z-10">Are You a Crochet Artist?</h2>
+<p class="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-10 relative z-10">
+                    Join Crochet Hub as a seller and share your craftsmanship with a community that appreciates the art of handmade.
+                </p>
+<button class="bg-white text-primary px-10 py-4 rounded-full font-extrabold text-lg shadow-xl hover:scale-105 transition-transform active:scale-95 relative z-10">
+                    Start Selling
+                </button>
+</div>
+</section>
+</main>
+<!-- FOOTER -->
+<footer class="bg-surface-container dark:bg-stone-900 border-t border-outline-variant/20">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto font-inter text-sm leading-relaxed">
+<!-- Brand Column -->
+<div class="col-span-1 md:col-span-1">
+<a class="text-xl font-bold text-[#da6152] mb-4 block" href="#">Crochet Hub</a>
+<p class="text-on-surface-variant mb-6">A premium marketplace dedicated to the tactile soul. We curate the finest handmade crochet from verified artisans worldwide.</p>
+<div class="flex gap-4">
+<a class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">social_leaderboard</span>
+</a>
+<a class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">camera</span>
+</a>
+</div>
+</div>
+<!-- Shop Links -->
+<div>
+<h4 class="font-bold text-on-surface mb-6 uppercase tracking-widest text-xs">Shop</h4>
+<ul class="space-y-4">
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">All Products</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Categories</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Custom Order</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">New Arrivals</a></li>
+</ul>
+</div>
+<!-- Account Links -->
+<div>
+<h4 class="font-bold text-on-surface mb-6 uppercase tracking-widest text-xs">My Account</h4>
+<ul class="space-y-4">
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">My Profile</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Order History</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Wishlist</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Privacy Policy</a></li>
+</ul>
+</div>
+<!-- Support Links -->
+<div>
+<h4 class="font-bold text-on-surface mb-6 uppercase tracking-widest text-xs">Support</h4>
+<ul class="space-y-4">
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Support Center</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Contact Us</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Shipping Info</a></li>
+<li><a class="text-[#1c1b1b]/70 dark:text-stone-400 hover:text-[#da6152] dark:hover:text-[#c25042] transition-colors" href="#">Returns &amp; Exchange</a></li>
+</ul>
+</div>
+</div>
+<!-- Copyright -->
+<div class="max-w-7xl mx-auto px-8 py-8 border-t border-outline-variant/10 text-center">
+<p class="text-on-surface-variant/60 text-xs">© 2024 Crochet Hub. Crafted for the tactile soul.</p>
+</div>
+</footer>
+</body></html>

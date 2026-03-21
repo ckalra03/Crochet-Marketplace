@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-highest": "#e5e2e1",
+              "on-surface": "#1c1b1b",
+              "surface-container": "#f0eded",
+              "surface": "#fcf9f8",
+              "on-error-container": "#93000a",
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "secondary-container": "#fc9434",
+              "on-tertiary-fixed": "#1f1b17",
+              "primary-fixed-dim": "#ffb4a9",
+              "on-secondary-fixed": "#2f1500",
+              "inverse-primary": "#ffb4a9",
+              "tertiary-container": "#7a736e",
+              "on-secondary-fixed-variant": "#6f3900",
+              "on-tertiary-container": "#fffbff",
+              "on-background": "#1c1b1b",
+              "inverse-surface": "#313030",
+              "tertiary": "#615b56",
+              "surface-container-high": "#eae7e7",
+              "surface-variant": "#e5e2e1",
+              "background": "#fcf9f8",
+              "surface-bright": "#fcf9f8",
+              "inverse-on-surface": "#f3f0ef",
+              "outline": "#8a716e",
+              "surface-container-lowest": "#ffffff",
+              "error": "#ba1a1a",
+              "surface-tint": "#a53a2e",
+              "surface-dim": "#dcd9d9",
+              "on-primary-container": "#fffbff",
+              "on-surface-variant": "#57423f",
+              "tertiary-fixed": "#eae1da",
+              "error-container": "#ffdad6",
+              "secondary-fixed-dim": "#ffb77f",
+              "surface-container-low": "#f6f3f2",
+              "on-tertiary-fixed-variant": "#4b4641",
+              "on-error": "#ffffff",
+              "primary-fixed": "#ffdad5",
+              "secondary-fixed": "#ffdcc3",
+              "tertiary-fixed-dim": "#cec5bf",
+              "secondary": "#914c00",
+              "primary": "#a2382c",
+              "on-primary-fixed-variant": "#85231a",
+              "primary-container": "#c25042",
+              "on-secondary-container": "#673400",
+              "on-secondary": "#ffffff",
+              "outline-variant": "#dec0bb",
+              "on-primary-fixed": "#410001"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-nav {
+        background: rgba(252, 249, 248, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .artisanal-card:hover img {
+        transform: scale(1.02);
+      }
+      .artisanal-card:hover {
+        background-color: #eae7e7; /* surface-container-high */
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #dec0bb;
+        border-radius: 10px;
+      }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopNavBar Shared Component -->
+<header class="flex justify-between items-center w-full px-8 py-4 sticky top-0 z-50 glass-nav">
+<div class="text-2xl font-black font-headline text-[#DA6152] tracking-tighter">Crochet Hub</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#DA6152] font-bold border-b-2 border-[#DA6152] pb-1" href="#">Shop</a>
+<a class="text-stone-600 font-medium hover:text-[#DA6152] transition-colors" href="#">Categories</a>
+<a class="text-stone-600 font-medium hover:text-[#DA6152] transition-colors" href="#">Custom Order</a>
+</nav>
+<div class="flex items-center gap-6 text-[#DA6152]">
+<button class="hover:bg-stone-100 p-2 rounded-full transition-all duration-300">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="hover:bg-stone-100 p-2 rounded-full transition-all duration-300 relative">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="absolute top-0 right-0 bg-primary text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">3</span>
+</button>
+<button class="hover:bg-stone-100 p-2 rounded-full transition-all duration-300">
+<span class="material-symbols-outlined">person</span>
+</button>
+</div>
+</header>
+<main class="max-w-[1440px] mx-auto px-8 py-8">
+<!-- Breadcrumb -->
+<nav class="mb-8 flex items-center gap-2 text-sm text-tertiary">
+<a class="hover:text-primary transition-colors" href="#">Home</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="font-medium text-on-surface-variant">Products</span>
+</nav>
+<!-- Page Header -->
+<div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-4xl font-bold font-headline tracking-tight text-on-surface">Shop All Products</h1>
+<p class="text-tertiary mt-1">42 products found</p>
+</div>
+<div class="flex items-center gap-4">
+<label class="text-sm font-label uppercase tracking-widest text-tertiary">Sort By</label>
+<select class="bg-surface-container-low border-none rounded-lg text-sm focus:ring-2 focus:ring-primary py-2 px-4 cursor-pointer">
+<option>Newest</option>
+<option>Price Low-High</option>
+<option>Price High-Low</option>
+<option>Name</option>
+</select>
+</div>
+</div>
+<div class="flex flex-col md:flex-row gap-12">
+<!-- Sidebar Filters -->
+<aside class="w-full md:w-[250px] flex-shrink-0">
+<div class="flex flex-col gap-8 p-6 bg-surface-container-low rounded-xl custom-scrollbar">
+<div>
+<h3 class="font-headline font-bold text-lg mb-4">Filters</h3>
+<div class="relative">
+<input class="w-full bg-surface border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary outline-variant/15" placeholder="Search..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-tertiary text-sm">search</span>
+</div>
+</div>
+<!-- Product Type -->
+<div>
+<h4 class="font-label text-xs tracking-widest uppercase text-tertiary mb-3">Product Type</h4>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary border-outline-variant bg-surface" type="checkbox"/>
+<span class="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Ready Stock</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary border-outline-variant bg-surface" type="checkbox"/>
+<span class="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Made to Order</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="rounded text-primary focus:ring-primary border-outline-variant bg-surface" type="checkbox"/>
+<span class="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Custom</span>
+</label>
+</div>
+</div>
+<!-- Category Section -->
+<div>
+<h4 class="font-label text-xs tracking-widest uppercase text-tertiary mb-3">Category</h4>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-3 cursor-pointer group bg-surface-container-highest p-2 rounded-lg text-[#DA6152] font-semibold">
+<span class="material-symbols-outlined text-sm">toys</span>
+<span class="text-sm uppercase tracking-wide">Amigurumi</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group hover:translate-x-1 transition-transform p-2">
+<span class="material-symbols-outlined text-sm text-tertiary">bed</span>
+<span class="text-sm text-stone-500 uppercase tracking-wide">Blankets</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group hover:translate-x-1 transition-transform p-2">
+<span class="material-symbols-outlined text-sm text-tertiary">shopping_bag</span>
+<span class="text-sm text-stone-500 uppercase tracking-wide">Bags</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group hover:translate-x-1 transition-transform p-2">
+<span class="material-symbols-outlined text-sm text-tertiary">home</span>
+<span class="text-sm text-stone-500 uppercase tracking-wide">Home Decor</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group hover:translate-x-1 transition-transform p-2">
+<span class="material-symbols-outlined text-sm text-tertiary">baby_changing_station</span>
+<span class="text-sm text-stone-500 uppercase tracking-wide">Baby</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group hover:translate-x-1 transition-transform p-2">
+<span class="material-symbols-outlined text-sm text-tertiary">checkroom</span>
+<span class="text-sm text-stone-500 uppercase tracking-wide">Clothing</span>
+</label>
+</div>
+</div>
+<!-- Price Range -->
+<div>
+<h4 class="font-label text-xs tracking-widest uppercase text-tertiary mb-3">Price Range</h4>
+<div class="grid grid-cols-2 gap-2 mb-4">
+<input class="w-full bg-surface border-none rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-primary outline-variant/15" placeholder="Min" type="number"/>
+<input class="w-full bg-surface border-none rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-primary outline-variant/15" placeholder="Max" type="number"/>
+</div>
+<button class="w-full py-2 bg-gradient-to-br from-primary to-primary-container text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all active:scale-95">
+                            Apply Price Range
+                        </button>
+</div>
+</div>
+</aside>
+<!-- Product Grid -->
+<section class="flex-1">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Product Card 1 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Crochet stuffed teddy bear handmade" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB04CjnofopXhVfoo4yVrXSna_RsIteZmP4WEqhTc2mlUrQcH7zqI3ZSddRJlEOoCi-R2Smw0yPGNVC62cH2Ak408sYZ1nIJjWXnYP5jCtdMA3xBum4-1imtNiY5LHB77p4pOrLB4hWnMint52OMY_X51Pn33hZeMbkxnf0cTPanueurb944c_kuwdQ6yvE-UU8iFKOtKwrOm3XfljKZ5SpOPidptnGeyVL8Y08RoK_Qz_kwl_xd8zLTy78Btx5oA5Mmx_IkkYlKw"/>
+<div class="absolute top-4 left-4 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Ready Stock</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Crochet Teddy Bear</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">4.5</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">by Craft Corner Studio</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹899</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product Card 2 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Colorful rainbow striped crochet baby blanket" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBER1pi-KkK-T4i8W302Y-FDlpr8kMIsDe9yXFZ23C7QoJJLieVeJ269B0N6RX-2o8duJFUTY3geJIjcaXFueh14PFgHrR1eWyXFl2cNzS1QqsVJYkd4SahiOovsB4gXwAXgSUTsk8EyCJM0Pa_5AbI9NMCucnMD_A4zrowHULyDb46SJDSN1m9BGcL_Rj8_-OXg5pi_b2F3JXTPMSeqtO7SPpSSQkQKugQFtku5ycIAfM48gbKi_r-inDG4YiEw9F5j7aFuaQTxg"/>
+<div class="absolute top-4 left-4 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Made to Order</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Rainbow Baby Blanket</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">4.9</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">7 day lead time</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹2,499</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product Card 3 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Bohemian woven crochet market bag" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa1iYTz5JR33uVgIXQVC39mTo5MYgmR_BJJdQyMRNvCd3hBPcz--xmZlqhVffcmiMTfSgMJtIURFW3ebNluwdLa6rDYVD92wdttol_jJ3wvQOMa4MqaC9G56EGWECD163kIeIP_J0T3-TF2jLsdBM50Z7VRHzTHV3KPd-9RISHTRI0yxuZlsB-oQ-3vi2kSbDqxcrE6dJHKXH27Y_1LpsdoLE8du0ZbOmZvTebRZm5DyjYjiX2KMlWNbc1z0-hng3dOgxrBBnMzA"/>
+<div class="absolute top-4 left-4 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Ready Stock</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Bohemian Market Bag</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">4.7</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">Sustainable fashion</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹599</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product Card 4 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Intricate macrame wall hanging art" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLMKYcfTUQSTe06VyG0t5_gj2_jq0VYjQtbH_zrbL6DeG_PwBDFFOo_2Cb5MqJDe7-3-QPu889yiFUjCrLIqM1QI3l9ilIgbFXrf14qr03QCiKqGWQoKldRz4WZTSlAQtPGvYUJipIzLgzhVOtNzV2BuPYxdtr0nA8ycLTivOMSGz2k4eC-50jUFcBADQs20faYbE4pSXPIfcQMjrpsbUZn8fR8JO3l1bvVY2u-IFsolAq_CcGTuz7959vgFnFYIBv_hsV_MMUqg"/>
+<div class="absolute top-4 left-4 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Made to Order</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Macrame Wall Hanging</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">4.8</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">Custom dimensions available</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹1,499</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product Card 5 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Handmade soft crochet baby booties" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNlEtV7qsXm1NtEbjMlPk-vZQL3UFughQyeZKUVDxHzgGWKF_S27GqrLLBIXzzpGeyClOTlo5jpSjpuac7E0kPCCganrCteT58D450spk62g1-fz2m_LBC4O234L3_p49y6DZPRZS2RdX0IQCyuCedW8c4SvV-FIQLP8ul4P1NIeU0VjDVFBNWZ-Ko-m2dFYcICUvqoY8xMYQGdOuOcQ7me24Y5Jha2wVNNRrWXsIHAZYbOH4id1BaedhaGDPjtxpv48KYOGvWrQ"/>
+<div class="absolute top-4 left-4 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Ready Stock</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Crochet Baby Booties</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">4.6</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">100% Soft Cotton</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹349</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Product Card 6 -->
+<article class="artisanal-card group flex flex-col bg-surface-container-lowest transition-all duration-300 rounded-xl overflow-hidden cursor-pointer">
+<div class="aspect-square overflow-hidden bg-surface-container relative">
+<img class="w-full h-full object-cover transition-transform duration-500" data-alt="Large traditional granny square throw blanket" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUfL1m5kTdvouvj2xzVZ3SXTTA9kdBmnnbJBDyC1ZPPo48I8jcNmbTA7lZ6nwkrfbl9U5KB6yyC3lLWbVU8ldvOAZMoMo3wOFkhwmq20TOrNcn5mXfPF9SuGbrUf-NC8BwjpBfhNllxk47BgMRpJzHyaMKGBsK-f2vUHQHuwJ9Zsbkr6gbnIJsVadvqMkWYDPXCplkKvaNpAXkvOfI73kSuJn7q3KmIQqqoPwAheOI84fQ8d9bVMPzQmIe1uir-GnjKDuHCwPo_w"/>
+<div class="absolute top-4 left-4 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter">Made to Order</div>
+</div>
+<div class="p-6 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-bold text-lg text-on-surface">Granny Square Throw</h3>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-xs font-bold">5.0</span>
+</div>
+</div>
+<p class="text-tertiary text-sm mb-4">Artisanal heirloom piece</p>
+<div class="mt-auto flex justify-between items-center">
+<span class="text-xl font-bold text-[#DA6152]">₹3,999</span>
+<button class="p-2 hover:bg-primary-container hover:text-white text-primary transition-colors rounded-lg">
+<span class="material-symbols-outlined">add_shopping_cart</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+<!-- Pagination -->
+<nav class="mt-16 flex items-center justify-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-tertiary">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant font-medium">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant font-medium">3</button>
+<span class="px-2 text-tertiary">...</span>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-on-surface-variant font-medium">8</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-surface-container-high transition-colors text-tertiary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</nav>
+</section>
+</div>
+</main>
+<footer class="mt-20 py-12 bg-surface-container-low px-8">
+<div class="max-w-[1440px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+<div>
+<div class="text-xl font-black font-headline text-[#DA6152] tracking-tighter mb-4">Crochet Hub</div>
+<p class="text-tertiary text-sm">Curating the finest handmade crochet wonders from master crafters across the globe.</p>
+</div>
+<div>
+<h4 class="font-bold mb-4">Explore</h4>
+<ul class="text-sm text-tertiary space-y-2">
+<li><a class="hover:text-primary transition-colors" href="#">Our Story</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Craftsmanship</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Seller Guide</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-4">Support</h4>
+<ul class="text-sm text-tertiary space-y-2">
+<li><a class="hover:text-primary transition-colors" href="#">Shipping Policy</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Returns &amp; Refunds</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Contact Us</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-4">Newsletter</h4>
+<div class="flex gap-2">
+<input class="bg-surface border-none rounded-lg py-2 px-3 text-sm flex-1 focus:ring-1 focus:ring-primary outline-variant/15" placeholder="Your email" type="email"/>
+<button class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">Join</button>
+</div>
+</div>
+</div>
+<div class="max-w-[1440px] mx-auto mt-12 pt-8 border-t border-outline-variant/15 text-center text-xs text-tertiary">
+            © 2024 Crochet Hub Marketplace. All rights reserved.
+        </div>
+</footer>
+</body></html>

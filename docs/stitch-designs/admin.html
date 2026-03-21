@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Crochet Hub Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-primary": "#ffb4a9",
+                        "primary-fixed-dim": "#ffb4a9",
+                        "on-primary-fixed-variant": "#85231a",
+                        "surface": "#f9f9f8",
+                        "inverse-surface": "#2f3130",
+                        "surface-variant": "#e2e2e2",
+                        "secondary-fixed": "#ffdcc3",
+                        "secondary-container": "#fc9434",
+                        "secondary": "#914c00",
+                        "primary-fixed": "#ffdad5",
+                        "outline-variant": "#dec0bb",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#797372",
+                        "inverse-on-surface": "#f1f1f0",
+                        "surface-container-low": "#f3f4f3",
+                        "background": "#f9f9f8",
+                        "on-primary": "#ffffff",
+                        "primary": "#a2382c",
+                        "tertiary-fixed-dim": "#cdc5c3",
+                        "surface-bright": "#f9f9f8",
+                        "on-secondary-fixed": "#2f1500",
+                        "on-primary-container": "#fffbff",
+                        "on-secondary-container": "#673400",
+                        "on-tertiary-fixed": "#1e1b1a",
+                        "primary-container": "#c25042",
+                        "surface-tint": "#a53a2e",
+                        "on-primary-fixed": "#410001",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#e9e1df",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e8e8e7",
+                        "on-surface": "#1a1c1c",
+                        "tertiary": "#605b59",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#ffb77f",
+                        "surface-container": "#eeeeed",
+                        "on-tertiary-fixed-variant": "#4b4644",
+                        "on-background": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#dadad9",
+                        "on-secondary-fixed-variant": "#6f3900",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-surface-variant": "#57423f",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#fffbff",
+                        "outline": "#8a716e",
+                        "error-container": "#ffdad6"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f9f8;
+        }
+        .editorial-shadow {
+            box-shadow: 0px 12px 32px rgba(41, 37, 36, 0.04);
+        }
+        .pattern-thread-dash {
+            background-image: linear-gradient(to right, #914c00 50%, transparent 50%);
+            background-size: 8px 1px;
+            background-repeat: repeat-x;
+        }
+    </style>
+</head>
+<body class="text-on-surface antialiased">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full w-[260px] bg-stone-900 dark:bg-stone-950 flex flex-col py-6 shadow-xl z-50">
+<div class="px-6 mb-10">
+<h1 class="text-lg font-bold text-stone-100 tracking-tight">Admin Panel</h1>
+<p class="text-[10px] text-stone-500 uppercase tracking-[0.2em] font-semibold mt-1">Management Suite</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="bg-stone-800/50 text-stone-50 border-l-4 border-[#da6152] py-3 px-6 w-full flex items-center gap-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-medium tracking-wide">Dashboard</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="groups">groups</span>
+<span class="text-sm font-medium tracking-wide">Sellers</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="inventory_2">inventory_2</span>
+<span class="text-sm font-medium tracking-wide">Products</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="shopping_cart">shopping_cart</span>
+<span class="text-sm font-medium tracking-wide">Orders</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_circle">check_circle</span>
+<span class="text-sm font-medium tracking-wide">Warehouse/QC</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings_suggest">settings_suggest</span>
+<span class="text-sm font-medium tracking-wide">On-Demand</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="assignment_return">assignment_return</span>
+<span class="text-sm font-medium tracking-wide">Returns</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="gavel">gavel</span>
+<span class="text-sm font-medium tracking-wide">Disputes</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="payments">payments</span>
+<span class="text-sm font-medium tracking-wide">Payouts</span>
+</a>
+<a class="text-stone-400 py-3 px-6 w-full flex items-center gap-3 hover:bg-stone-800 hover:text-stone-100 transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+<span class="text-sm font-medium tracking-wide">Audit Logs</span>
+</a>
+</nav>
+<div class="mt-auto px-6 py-4 flex items-center gap-3 border-t border-stone-800">
+<div class="h-8 w-8 rounded-full bg-stone-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-stone-400 text-sm" data-icon="account_circle">account_circle</span>
+</div>
+<div class="overflow-hidden">
+<p class="text-stone-200 text-xs font-bold truncate">Admin Avatar</p>
+<p class="text-stone-500 text-[10px] truncate">System Administrator</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-[260px] min-h-screen">
+<!-- Top Navigation -->
+<header class="docked full-width top-0 z-40 sticky bg-white/80 dark:bg-stone-900/80 backdrop-blur-md shadow-sm dark:shadow-none flex justify-between items-center w-full px-12 py-4">
+<div class="flex items-center gap-4">
+<h2 class="text-xl font-bold bg-gradient-to-br from-[#a2382c] to-[#c25042] bg-clip-text text-transparent Inter font-sans tracking-tight">Crochet Hub</h2>
+<div class="h-4 w-[1px] bg-stone-200 mx-2"></div>
+<div class="flex items-center bg-stone-50 dark:bg-stone-950 px-3 py-1.5 rounded-lg border border-stone-100 dark:border-stone-800">
+<span class="material-symbols-outlined text-stone-400 text-lg mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none text-xs focus:ring-0 w-64 text-on-surface" placeholder="Global search..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative group cursor-pointer hover:scale-95 active:duration-150 transition-all">
+<span class="material-symbols-outlined text-stone-500 dark:text-stone-400" data-icon="notifications">notifications</span>
+<div class="absolute -top-0.5 -right-0.5 h-2 w-2 bg-[#a2382c] rounded-full border border-white"></div>
+</div>
+<div class="flex items-center gap-2 cursor-pointer group hover:scale-95 active:duration-150 transition-all">
+<span class="material-symbols-outlined text-stone-500 dark:text-stone-400" data-icon="account_circle">account_circle</span>
+<span class="text-xs font-semibold text-stone-700 dark:text-stone-300">Admin</span>
+</div>
+</div>
+</header>
+<div class="px-12 py-10 max-w-7xl mx-auto space-y-10">
+<!-- Breadcrumbs / Page Title -->
+<div class="flex justify-between items-end">
+<div>
+<h3 class="text-3xl font-extrabold tracking-tight text-on-surface">Dashboard</h3>
+<p class="text-on-surface-variant text-sm mt-1">Daily overview of your artisanal marketplace performance.</p>
+</div>
+<div class="text-right">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Last updated</p>
+<p class="text-sm font-medium">Oct 24, 2023 • 14:32 PM</p>
+</div>
+</div>
+<!-- TOP ROW: KPI Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Orders Today -->
+<div class="bg-surface-container-lowest editorial-shadow p-6 rounded-lg border-l-[4px] border-blue-500 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Orders Today</span>
+<span class="material-symbols-outlined text-blue-500 text-lg" data-icon="shopping_basket">shopping_basket</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h4 class="text-4xl font-extrabold tracking-tight">12</h4>
+<span class="text-xs font-bold text-green-600 flex items-center"><span class="material-symbols-outlined text-xs" data-icon="arrow_upward">arrow_upward</span> 8%</span>
+</div>
+<div class="mt-4 h-8 flex items-end gap-1">
+<div class="flex-1 bg-blue-100 rounded-t-sm h-[40%]"></div>
+<div class="flex-1 bg-blue-100 rounded-t-sm h-[60%]"></div>
+<div class="flex-1 bg-blue-100 rounded-t-sm h-[30%]"></div>
+<div class="flex-1 bg-blue-100 rounded-t-sm h-[70%]"></div>
+<div class="flex-1 bg-blue-500 rounded-t-sm h-[90%] transition-all group-hover:h-full"></div>
+</div>
+</div>
+<!-- Pending Sellers -->
+<div class="bg-surface-container-lowest editorial-shadow p-6 rounded-lg border-l-[4px] border-amber-500 relative">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Pending Sellers</span>
+<span class="material-symbols-outlined text-amber-500 text-lg" data-icon="person_add">person_add</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h4 class="text-4xl font-extrabold tracking-tight">3</h4>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-4 italic">Awaiting document verification</p>
+</div>
+<!-- Active Products -->
+<div class="bg-surface-container-lowest editorial-shadow p-6 rounded-lg border-l-[4px] border-green-500 relative">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Active Products</span>
+<span class="material-symbols-outlined text-green-500 text-lg" data-icon="inventory">inventory</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h4 class="text-4xl font-extrabold tracking-tight">47</h4>
+<span class="text-xs font-bold text-green-600 flex items-center"><span class="material-symbols-outlined text-xs" data-icon="add">add</span> 2 new</span>
+</div>
+<div class="mt-4 flex -space-x-2">
+<div class="h-6 w-6 rounded-full border-2 border-white bg-stone-200"></div>
+<div class="h-6 w-6 rounded-full border-2 border-white bg-stone-300"></div>
+<div class="h-6 w-6 rounded-full border-2 border-white bg-stone-400"></div>
+</div>
+</div>
+<!-- Revenue (MTD) -->
+<div class="bg-surface-container-lowest editorial-shadow p-6 rounded-lg border-l-[4px] border-[#a2382c] relative">
+<div class="flex justify-between items-start mb-4">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Revenue (MTD)</span>
+<span class="material-symbols-outlined text-[#a2382c] text-lg" data-icon="payments">payments</span>
+</div>
+<div class="flex items-baseline gap-2">
+<h4 class="text-2xl font-extrabold tracking-tight">₹1,24,500</h4>
+</div>
+<p class="text-[11px] text-on-surface-variant mt-6">Target: <span class="font-bold text-on-surface">₹2,00,000</span></p>
+<div class="mt-2 w-full h-1 bg-stone-100 rounded-full overflow-hidden">
+<div class="h-full bg-[#a2382c] w-[62%]"></div>
+</div>
+</div>
+</div>
+<!-- SECOND ROW: Micro-Stats -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="bg-surface-container-low p-4 rounded-lg flex items-center gap-4 hover:bg-stone-100 transition-colors cursor-pointer group">
+<div class="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-lg" data-icon="gavel">gavel</span>
+</div>
+<div>
+<p class="text-2xl font-bold leading-none">2</p>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">Open Disputes</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg flex items-center gap-4 hover:bg-stone-100 transition-colors cursor-pointer group">
+<div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-lg" data-icon="assignment_return">assignment_return</span>
+</div>
+<div>
+<p class="text-2xl font-bold leading-none">5</p>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">Pending Returns</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg flex items-center gap-4 hover:bg-stone-100 transition-colors cursor-pointer group">
+<div class="h-10 w-10 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-lg" data-icon="account_balance_wallet">account_balance_wallet</span>
+</div>
+<div>
+<p class="text-2xl font-bold leading-none">3</p>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">Pending Payouts</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-4 rounded-lg flex items-center gap-4 hover:bg-stone-100 transition-colors cursor-pointer group">
+<div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 transition-transform group-hover:scale-110">
+<span class="material-symbols-outlined text-lg" data-icon="groups">groups</span>
+</div>
+<div>
+<p class="text-2xl font-bold leading-none">8</p>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mt-1">Active Sellers</p>
+</div>
+</div>
+</div>
+<!-- THIRD ROW: Table & Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Recent Orders Table -->
+<div class="lg:col-span-2 bg-surface-container-lowest editorial-shadow rounded-lg p-6">
+<div class="flex justify-between items-center mb-8">
+<h5 class="text-lg font-bold tracking-tight">Recent Orders</h5>
+<button class="text-xs font-bold text-primary flex items-center gap-1 hover:underline">View All Orders <span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span></button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant border-b border-stone-100">
+<th class="pb-4 font-bold">Order#</th>
+<th class="pb-4 font-bold">Customer</th>
+<th class="pb-4 font-bold">Amount</th>
+<th class="pb-4 font-bold">Status</th>
+<th class="pb-4 font-bold">Date</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-stone-50">
+<tr class="hover:bg-stone-50/50 transition-colors group">
+<td class="py-5 text-sm font-bold text-primary">#ORD-9021</td>
+<td class="py-5">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold">AS</div>
+<span class="text-sm font-medium">Ananya Sharma</span>
+</div>
+</td>
+<td class="py-5 text-sm font-semibold">₹3,450</td>
+<td class="py-5">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter bg-blue-50 text-blue-600">Processing</span>
+</td>
+<td class="py-5 text-xs text-on-surface-variant">Oct 24, 2023</td>
+</tr>
+<tr class="hover:bg-stone-50/50 transition-colors group">
+<td class="py-5 text-sm font-bold text-primary">#ORD-9018</td>
+<td class="py-5">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold">RK</div>
+<span class="text-sm font-medium">Rahul Kapoor</span>
+</div>
+</td>
+<td class="py-5 text-sm font-semibold">₹1,200</td>
+<td class="py-5">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter bg-amber-50 text-amber-600 font-bold">Pending</span>
+</td>
+<td class="py-5 text-xs text-on-surface-variant">Oct 24, 2023</td>
+</tr>
+<tr class="hover:bg-stone-50/50 transition-colors group">
+<td class="py-5 text-sm font-bold text-primary">#ORD-9015</td>
+<td class="py-5">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold">VP</div>
+<span class="text-sm font-medium">Vikram Patel</span>
+</div>
+</td>
+<td class="py-5 text-sm font-semibold">₹4,890</td>
+<td class="py-5">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter bg-green-50 text-green-700 font-bold">Delivered</span>
+</td>
+<td class="py-5 text-xs text-on-surface-variant">Oct 23, 2023</td>
+</tr>
+<tr class="hover:bg-stone-50/50 transition-colors group">
+<td class="py-5 text-sm font-bold text-primary">#ORD-9012</td>
+<td class="py-5">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold">ML</div>
+<span class="text-sm font-medium">Meera Luthra</span>
+</div>
+</td>
+<td class="py-5 text-sm font-semibold">₹2,100</td>
+<td class="py-5">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter bg-blue-50 text-blue-600 font-bold">Processing</span>
+</td>
+<td class="py-5 text-xs text-on-surface-variant">Oct 23, 2023</td>
+</tr>
+<tr class="hover:bg-stone-50/50 transition-colors group">
+<td class="py-5 text-sm font-bold text-primary">#ORD-9009</td>
+<td class="py-5">
+<div class="flex items-center gap-3">
+<div class="h-8 w-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold">JD</div>
+<span class="text-sm font-medium">Jiten Das</span>
+</div>
+</td>
+<td class="py-5 text-sm font-semibold">₹850</td>
+<td class="py-5">
+<span class="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-tighter bg-green-50 text-green-700 font-bold">Delivered</span>
+</td>
+<td class="py-5 text-xs text-on-surface-variant">Oct 22, 2023</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Quick Actions Grid -->
+<div class="space-y-6">
+<h5 class="text-lg font-bold tracking-tight">Quick Actions</h5>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-high hover:bg-white hover:editorial-shadow hover:-translate-y-1 transition-all p-5 rounded-lg text-center cursor-pointer flex flex-col items-center justify-center gap-2 group border border-transparent hover:border-stone-100">
+<div class="h-12 w-12 rounded-xl bg-[#ffdad5] flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="verified_user">verified_user</span>
+</div>
+<p class="text-[11px] font-bold uppercase tracking-wide mt-2">Review Sellers</p>
+</div>
+<div class="bg-surface-container-high hover:bg-white hover:editorial-shadow hover:-translate-y-1 transition-all p-5 rounded-lg text-center cursor-pointer flex flex-col items-center justify-center gap-2 group border border-transparent hover:border-stone-100">
+<div class="h-12 w-12 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+</div>
+<p class="text-[11px] font-bold uppercase tracking-wide mt-2">Approve Products</p>
+</div>
+<div class="bg-surface-container-high hover:bg-white hover:editorial-shadow hover:-translate-y-1 transition-all p-5 rounded-lg text-center cursor-pointer flex flex-col items-center justify-center gap-2 group border border-transparent hover:border-stone-100">
+<div class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</div>
+<p class="text-[11px] font-bold uppercase tracking-wide mt-2">Manage Orders</p>
+</div>
+<div class="bg-surface-container-high hover:bg-white hover:editorial-shadow hover:-translate-y-1 transition-all p-5 rounded-lg text-center cursor-pointer flex flex-col items-center justify-center gap-2 group border border-transparent hover:border-stone-100">
+<div class="h-12 w-12 rounded-xl bg-stone-200 flex items-center justify-center text-stone-700 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+</div>
+<p class="text-[11px] font-bold uppercase tracking-wide mt-2">Warehouse QC</p>
+</div>
+</div>
+<!-- Payout Alert Card -->
+<div class="bg-gradient-to-br from-[#a2382c] to-[#c25042] rounded-lg p-6 text-on-primary shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<p class="text-[10px] font-bold uppercase tracking-widest text-white/70">System Alert</p>
+<h6 class="text-lg font-bold mt-1">Pending Payout Batch</h6>
+<p class="text-xs text-white/80 mt-2">Weekly batch for 42 sellers is ready for final approval and release.</p>
+<button class="mt-4 w-full bg-white text-[#a2382c] py-2.5 rounded-md text-xs font-bold hover:bg-stone-50 active:scale-[0.98] transition-all">Execute Batch</button>
+</div>
+<!-- Abstract Thread Decoration -->
+<div class="absolute -bottom-6 -right-6 opacity-20">
+<span class="material-symbols-outlined text-9xl" data-icon="texture">texture</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-20 px-12 py-8 border-t border-stone-100 text-center">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">© 2023 Crochet Hub Marketplace • Professional Admin Suite</p>
+</footer>
+</main>
+<!-- Contextual FAB (Suppressing on admin dash as per rules, using static bottom link instead) -->
+<div class="fixed bottom-6 right-6 z-50 group">
+<button class="bg-stone-900 text-white p-4 rounded-full shadow-2xl hover:bg-stone-800 transition-all flex items-center gap-2 active:scale-95">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-[120px] transition-all duration-300 text-xs font-bold">Help Desk</span>
+</button>
+</div>
+</body></html>

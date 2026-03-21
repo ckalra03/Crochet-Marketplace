@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
+import { fulfillmentService } from '../modules/fulfillment/fulfillment.service';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
 import { z } from 'zod';
@@ -136,6 +137,58 @@ router.post(
         req.body.notes,
       );
       res.json(order);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Warehouse / Fulfillment ───────────────────────
+router.get('/warehouse', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await fulfillmentService.listWarehouseItems(
+      req.query.status as string,
+      Number(req.query.page) || 1,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/warehouse/:id/receive', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const item = await fulfillmentService.receiveItem(req.params.id, req.user!.userId);
+    res.json(item);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/warehouse/:id/qc',
+  validate(z.object({
+    result: z.enum(['PASS', 'FAIL']),
+    checklist: z.record(z.boolean()),
+    defectNotes: z.string().optional(),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const item = await fulfillmentService.submitQc(req.params.id, req.user!.userId, req.body);
+      res.json(item);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.post(
+  '/warehouse/:id/dispatch',
+  validate(z.object({ trackingNumber: z.string().min(1), shippingCarrier: z.string().min(1) })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const item = await fulfillmentService.dispatchItem(req.params.id, req.user!.userId, req.body);
+      res.json(item);
     } catch (err) {
       next(err);
     }

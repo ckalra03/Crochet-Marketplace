@@ -9,7 +9,7 @@ async function main() {
   // ─── Admin User ──────────────────────────────────
   const adminPassword = await bcrypt.hash('admin123456', 12);
   const admin = await prisma.user.upsert({
-    where: { uq_users_email_active: { email: 'admin@crochethub.com', deletedAt: null } },
+    where: { email: 'admin@crochethub.com' },
     update: {},
     create: {
       name: 'Admin',
@@ -24,7 +24,7 @@ async function main() {
   // ─── Test Buyer ──────────────────────────────────
   const buyerPassword = await bcrypt.hash('buyer123456', 12);
   const buyer = await prisma.user.upsert({
-    where: { uq_users_email_active: { email: 'buyer@test.com', deletedAt: null } },
+    where: { email: 'buyer@test.com' },
     update: {},
     create: {
       name: 'Test Buyer',
@@ -39,7 +39,7 @@ async function main() {
   // ─── Test Seller ─────────────────────────────────
   const sellerPassword = await bcrypt.hash('seller123456', 12);
   const sellerUser = await prisma.user.upsert({
-    where: { uq_users_email_active: { email: 'seller@test.com', deletedAt: null } },
+    where: { email: 'seller@test.com' },
     update: {},
     create: {
       name: 'Craft Corner',

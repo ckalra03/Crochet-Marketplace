@@ -2,8 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
+import { requestIdMiddleware } from './middleware/request-id';
+import { requestLogger } from './middleware/request-logger';
 
 const app = express();
+
+// Request ID for tracing
+app.use(requestIdMiddleware);
+
+// HTTP request logging
+app.use(requestLogger);
 
 // Security
 app.use(helmet());

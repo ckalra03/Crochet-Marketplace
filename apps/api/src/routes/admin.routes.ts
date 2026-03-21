@@ -3,6 +3,7 @@ import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
 import { fulfillmentService } from '../modules/fulfillment/fulfillment.service';
+import { onDemandService } from '../modules/on-demand/on-demand.service';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
 import { z } from 'zod';
@@ -137,6 +138,35 @@ router.post(
         req.body.notes,
       );
       res.json(order);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── On-Demand Requests ────────────────────────────
+router.get('/on-demand-requests', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await onDemandService.listAllRequests(req.query.status as string);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/on-demand-requests/:id/quote',
+  validate(z.object({
+    priceInCents: z.number().int().positive(),
+    estimatedDays: z.number().int().positive(),
+    description: z.string().optional(),
+    validityHours: z.number().int().positive().default(72),
+    sellerProfileId: z.string().uuid().optional(),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const quote = await onDemandService.createQuote(req.params.id, req.user!.userId, req.body);
+      res.status(201).json(quote);
     } catch (err) {
       next(err);
     }

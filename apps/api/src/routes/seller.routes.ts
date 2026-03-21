@@ -4,6 +4,7 @@ import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
 import { payoutService } from '../modules/seller-finance/payout.service';
 import { ratingService } from '../modules/ratings/rating.service';
+import { sellerDashboardService } from '../modules/dashboard/seller-dashboard.service';
 import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
@@ -57,6 +58,17 @@ router.put(
     }
   },
 );
+
+// ─── Dashboard ────────────────────────────────────
+router.get('/dashboard', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const stats = await sellerDashboardService.getDashboardStats(profile.id);
+    res.json(stats);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // ─── Ratings ───────────────────────────────────────
 router.get('/ratings', async (req: Request, res: Response, next: NextFunction) => {

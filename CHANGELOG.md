@@ -298,3 +298,52 @@ All notable changes to the Crochet Hub project, organized by feature branch.
 - `POST /api/v1/admin/payouts/:id/mark-paid` — mark as paid
 
 **Key files:** `apps/api/src/modules/seller-finance/payout.service.ts`
+
+---
+
+## Branch 15: `feature/ratings` — Ratings & Reviews
+
+**Merged:** 2026-03-22 | **Commits:** 2
+
+- Buyer submits 1-5 star rating + optional review per order item
+- Validates: order delivered, buyer ownership, no duplicates
+- Product and seller aggregate scoring (avg via Prisma aggregate)
+- Seller can view all received ratings with avg score
+
+**Key files:** `apps/api/src/modules/ratings/rating.service.ts`
+
+---
+
+## Branch 16: `feature/notifications` — Notifications & Real-time
+
+**Merged:** 2026-03-22 | **Commits:** 2
+
+- Socket.io server with JWT auth middleware
+- Role-based rooms: `user:{id}`, `seller:{id}`, `admin`
+- NotificationService with typed helpers for buyer (order status, quotes, returns), seller (approval, orders, payouts), and admin (applications, disputes) events
+- Integrated Socket.io into Express HTTP server
+
+**Key files:** `apps/api/src/socket/socket.ts`, `apps/api/src/modules/notifications/notification.service.ts`
+
+---
+
+## Branch 17: `feature/admin-dashboard` — Admin Dashboard
+
+**Merged:** 2026-03-22 | **Commits:** 2
+
+- Dashboard KPI stats: orders today, pending approvals, open disputes, revenue, active counts
+- Queryable audit log API with filters (action, userId, auditableType) and pagination
+
+**Key files:** `apps/api/src/modules/dashboard/admin-dashboard.service.ts`
+
+---
+
+## Branch 18: `feature/seller-dashboard` — Seller Dashboard
+
+**Merged:** 2026-03-22 | **Commits:** 2
+
+- Seller dashboard KPI: total/monthly orders, revenue, avg rating, active/pending products, payouts
+- Recent orders feed (last 5)
+- Commission rate display
+
+**Key files:** `apps/api/src/modules/dashboard/seller-dashboard.service.ts`

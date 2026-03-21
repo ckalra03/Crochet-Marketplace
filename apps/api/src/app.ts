@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import { env } from './config/env';
 import { requestIdMiddleware } from './middleware/request-id';
 import { requestLogger } from './middleware/request-logger';
+import { errorHandler } from './middleware/error-handler';
+import routes from './routes';
 
 const app = express();
 
@@ -30,5 +32,11 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// API routes
+app.use('/api/v1', routes);
+
+// Error handling
+app.use(errorHandler);
 
 export default app;

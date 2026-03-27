@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useCartStore } from '@/lib/stores/cart-store';
 import { ShoppingCart, User, LogOut, Package, LayoutDashboard, Search } from 'lucide-react';
+import { NotificationBell } from './notification-bell';
 
 export function StorefrontNav() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -32,6 +33,7 @@ export function StorefrontNav() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
+              <NotificationBell />
               <Link href="/cart" className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (

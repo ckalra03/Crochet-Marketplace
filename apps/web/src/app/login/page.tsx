@@ -86,7 +86,12 @@ export default function LoginPage() {
                 className="mt-1.5 h-12 bg-white border-[#e7e5e4] rounded-lg focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600" />
             </div>
             <div>
-              <Label htmlFor="password" className="text-sm font-semibold text-[#1c1b1b]">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-semibold text-[#1c1b1b]">Password</Label>
+                <Link href="/forgot-password" className="text-sm text-primary-600 font-medium hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <Input id="password" type="password" placeholder="Enter your password" value={password}
                 onChange={(e) => setPassword(e.target.value)} required
                 className="mt-1.5 h-12 bg-white border-[#e7e5e4] rounded-lg focus:ring-2 focus:ring-primary-600/20 focus:border-primary-600" />

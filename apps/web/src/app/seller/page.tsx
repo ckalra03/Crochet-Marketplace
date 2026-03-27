@@ -1,59 +1,120 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+/**
+ * Enhanced Seller Dashboard page.
+ *
+ * Displays KPI cards (Total Orders, Monthly Revenue, Avg Rating, Active Products),
+ * a PendingActionsWidget for items needing attention, a recent orders table,
+ * and the seller's commission rate.
+ */
+
+import Link from 'next/link';
+import { ShoppingBag, CreditCard, Star, Package } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, ShoppingBag, CreditCard, Star } from 'lucide-react';
-import api from '@/lib/api/client';
+import { KpiCard } from '@/components/dashboard/kpi-card';
+import { StatusBadge } from '@/components/feedback/status-badge';
+import { PendingActionsWidget } from '@/components/seller/pending-actions-widget';
+import { useSellerDashboard } from '@/lib/hooks/use-seller';
+import { formatMoney, formatDate } from '@/lib/utils/format';
 
 export default function SellerDashboardPage() {
-  const [stats, setStats] = useState<any>(null);
+  const { data: stats, isLoading } = useSellerDashboard();
 
-  useEffect(() => {
-    api.get('/seller/dashboard').then(({ data }) => setStats(data)).catch(() => {});
-  }, []);
+  if (isLoading) {
+    return <div className="py-20 text-center">Loading dashboard...</div>;
+  }
 
-  if (!stats) return <div className="py-20 text-center">Loading dashboard...</div>;
+  if (!stats) {
+    return <div className="py-20 text-center text-muted-foreground">Unable to load dashboard.</div>;
+  }
 
-  const kpis = [
-    { label: 'Total Orders', value: stats.overview.totalOrders, icon: <ShoppingBag className="h-5 w-5" />, color: 'text-blue-600' },
-    { label: 'Active Products', value: stats.overview.activeProducts, icon: <Package className="h-5 w-5" />, color: 'text-green-600' },
-    { label: 'Revenue', value: `₹${(stats.overview.totalRevenueInCents / 100).toLocaleString('en-IN')}`, icon: <CreditCard className="h-5 w-5" />, color: 'text-primary-600' },
-    { label: 'Avg Rating', value: stats.overview.avgRating ? stats.overview.avgRating.toFixed(1) : 'N/A', icon: <Star className="h-5 w-5" />, color: 'text-amber-600' },
-  ];
+  const overview = stats.overview ?? {};
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Seller Dashboard</h1>
+
+      {/* ── KPI Cards Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={`p-3 rounded-lg bg-muted ${kpi.color}`}>{kpi.icon}</div>
-              <div>
-                <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                <p className="text-2xl font-bold">{kpi.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <KpiCard
+          title="Total Orders"
+          value={String(overview.totalOrders ?? 0)}
+          icon={ShoppingBag}
+        />
+        <KpiCard
+          title="Monthly Revenue"
+          value={formatMoney(overview.monthlyRevenueInCents ?? overview.totalRevenueInCents ?? 0)}
+          icon={CreditCard}
+        />
+        <KpiCard
+          title="Avg Rating"
+          value={overview.avgRating ? overview.avgRating.toFixed(1) : 'N/A'}
+          icon={Star}
+        />
+        <KpiCard
+          title="Active Products"
+          value={String(overview.activeProducts ?? 0)}
+          icon={Package}
+        />
       </div>
 
+      {/* ── Pending Actions ── */}
+      <div className="mb-8">
+        <PendingActionsWidget
+          draftProducts={overview.draftProducts ?? 0}
+          allocatedOrders={overview.allocatedOrders ?? 0}
+        />
+      </div>
+
+      {/* ── Commission Rate ── */}
+      {stats.commissionRate != null && (
+        <Card className="mb-8">
+          <CardContent className="p-4 flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">Platform Commission Rate:</span>
+            <span className="text-lg font-bold text-primary">
+              {(stats.commissionRate * 100).toFixed(1)}%
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Recent Orders Table (last 5) ── */}
       {stats.recentOrders?.length > 0 && (
         <Card>
-          <CardHeader><CardTitle>Recent Orders</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Recent Orders</CardTitle>
+              <Link href="/seller/orders" className="text-sm text-primary hover:underline">
+                View all
+              </Link>
+            </div>
+          </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b text-muted-foreground">
-                  <th className="text-left py-2">Order</th><th className="text-left py-2">Product</th><th className="text-left py-2">Status</th><th className="text-left py-2">Date</th>
-                </tr></thead>
+                <thead>
+                  <tr className="border-b text-muted-foreground">
+                    <th className="text-left py-2">Order</th>
+                    <th className="text-left py-2">Product</th>
+                    <th className="text-left py-2">Status</th>
+                    <th className="text-left py-2">Amount</th>
+                    <th className="text-left py-2">Date</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {stats.recentOrders.map((item: any) => (
+                  {stats.recentOrders.slice(0, 5).map((item: any) => (
                     <tr key={item.id} className="border-b last:border-0">
-                      <td className="py-2 font-medium">{item.order?.orderNumber}</td>
-                      <td className="py-2">{item.product?.name}</td>
-                      <td className="py-2"><span className="text-xs bg-muted px-2 py-1 rounded">{item.order?.status?.replace(/_/g, ' ')}</span></td>
-                      <td className="py-2 text-muted-foreground">{item.order?.placedAt ? new Date(item.order.placedAt).toLocaleDateString('en-IN') : '-'}</td>
+                      <td className="py-2 font-medium">{item.order?.orderNumber ?? '-'}</td>
+                      <td className="py-2">{item.product?.name ?? '-'}</td>
+                      <td className="py-2">
+                        <StatusBadge status={item.order?.status ?? 'UNKNOWN'} type="order" />
+                      </td>
+                      <td className="py-2">
+                        {item.priceInCents ? formatMoney(item.priceInCents) : '-'}
+                      </td>
+                      <td className="py-2 text-muted-foreground">
+                        {item.order?.placedAt ? formatDate(item.order.placedAt) : '-'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>

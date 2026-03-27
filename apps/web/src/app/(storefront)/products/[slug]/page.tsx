@@ -1,143 +1,257 @@
-import { notFound } from 'next/navigation';
+'use client';
+
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Clock, ShieldCheck, Star, Package } from 'lucide-react';
-import { AddToCartButton } from './add-to-cart-button';
-import { PRODUCT_IMAGES, PRODUCT_DETAIL_IMAGES } from '@/lib/constants/images';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb';
+import { Package } from 'lucide-react';
+import { useProduct } from '@/lib/hooks/use-catalog';
+import { formatMoney } from '@/lib/utils/format';
+import { ProductGallery } from '@/components/product/product-gallery';
+import { ProductTypeBadge } from '@/components/product/product-type-badge';
+import { SellerAttribution } from '@/components/product/seller-attribution';
+import { LeadTimeIndicator } from '@/components/product/lead-time-indicator';
+import { ReturnPolicyCallout } from '@/components/product/return-policy-callout';
+import { AddToCartSection } from '@/components/product/add-to-cart-section';
+import { ReviewList } from '@/components/product/review-list';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+/* ────────────────────────── Loading skeleton ──────────────────────── */
 
-async function getProduct(slug: string) {
-  try {
-    const res = await fetch(`${API_URL}/catalog/products/${slug}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch { return null; }
+function ProductDetailSkeleton() {
+  return (
+    <div className="bg-[#fcf9f8] min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Breadcrumb skeleton */}
+        <Skeleton className="h-4 w-48 mb-8" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Gallery skeleton */}
+          <div>
+            <Skeleton className="aspect-square rounded-2xl mb-4" />
+            <div className="grid grid-cols-4 gap-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-lg" />
+              ))}
+            </div>
+          </div>
+
+          {/* Info skeleton */}
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-12 w-40" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const product = await getProduct(slug);
-  if (!product) notFound();
+/* ────────────────────────── 404 fallback ──────────────────────────── */
 
-  const mainImage = PRODUCT_DETAIL_IMAGES[slug as keyof typeof PRODUCT_DETAIL_IMAGES]?.main
-    || PRODUCT_IMAGES[slug as keyof typeof PRODUCT_IMAGES]
-    || PRODUCT_IMAGES.default;
-  const thumbnails = PRODUCT_DETAIL_IMAGES[slug as keyof typeof PRODUCT_DETAIL_IMAGES]?.thumbnails || [];
+function ProductNotFound() {
+  return (
+    <div className="bg-[#fcf9f8] min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <Package className="h-16 w-16 text-[#78716c] mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-[#1c1b1b] mb-2">Product Not Found</h1>
+        <p className="text-[#78716c] mb-6">
+          The product you are looking for does not exist or has been removed.
+        </p>
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 px-6 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-colors text-sm font-medium"
+        >
+          Browse Products
+        </Link>
+      </div>
+    </div>
+  );
+}
 
-  const returnPolicyLabel: Record<string, string> = {
-    DEFECT_ONLY: 'Returns accepted for defects only',
-    NO_RETURN: 'No returns (except platform-resolvable faults)',
-    STANDARD: 'Standard return policy',
-  };
+/* ────────────────────────── Main page ─────────────────────────────── */
+
+export default function ProductDetailPage() {
+  const params = useParams<{ slug: string }>();
+  const slug = params.slug;
+  const { data: product, isLoading, isError } = useProduct(slug);
+
+  // Loading state
+  if (isLoading) return <ProductDetailSkeleton />;
+
+  // 404 or error state
+  if (isError || !product) return <ProductNotFound />;
+
+  // Build media array from product data (API may return `media` or none)
+  const media: Array<{ filePath: string; type: string; isPrimary: boolean }> =
+    product.media ?? [];
 
   return (
     <div className="bg-[#fcf9f8] min-h-screen">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Link href="/products" className="inline-flex items-center gap-2 text-sm text-[#78716c] hover:text-primary-600 transition-colors mb-8 group">
-          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-          Back to products
-        </Link>
+        {/* ── Breadcrumb navigation ─────────────────────────────── */}
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href="/products">Products</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            {product.category && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link href={`/categories/${product.category.slug}`}>
+                      {product.category.name}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{product.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Image Gallery */}
+          {/* ── Left column: Image Gallery ────────────────────────── */}
+          <ProductGallery
+            media={media}
+            productName={product.name}
+            productType={product.productType}
+          />
+
+          {/* ── Right column: Product Info ────────────────────────── */}
           <div>
-            <div className="aspect-square rounded-2xl overflow-hidden bg-white shadow-sm mb-4">
-              <img className="w-full h-full object-cover" src={mainImage} alt={product.name} />
-            </div>
-            {thumbnails.length > 0 && (
-              <div className="grid grid-cols-4 gap-3">
-                {thumbnails.map((thumb: string, i: number) => (
-                  <div key={i} className="aspect-square rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:ring-2 hover:ring-primary-600 transition-all">
-                    <img className="w-full h-full object-cover" src={thumb} alt={`${product.name} view ${i + 1}`} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Product Info */}
-          <div>
-            <div className="flex gap-2 mb-4">
-              <Badge variant={product.productType === 'READY_STOCK' ? 'success' : 'warning'}>
-                {product.productType === 'READY_STOCK' ? 'Ready Stock' : product.productType === 'MADE_TO_ORDER' ? 'Made to Order' : 'Custom'}
-              </Badge>
-              <Badge variant="outline">{product.category?.name}</Badge>
-            </div>
-
-            <h1 className="text-3xl lg:text-4xl font-extrabold text-[#1c1b1b] mb-3 tracking-tight">{product.name}</h1>
-
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-sm text-[#78716c]">by</span>
-              <span className="font-semibold text-[#1c1b1b]">{product.sellerProfile?.businessName || 'Crochet Hub'}</span>
-              {product.avgRating > 0 && (
-                <span className="flex items-center gap-1 text-sm">
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span className="font-bold">{product.avgRating.toFixed(1)}</span>
-                  <span className="text-[#78716c]">({product._count?.ratings || 0} reviews)</span>
-                </span>
+            {/* Badges */}
+            <div className="flex gap-2 mb-4 flex-wrap">
+              <ProductTypeBadge type={product.productType} />
+              {product.category && (
+                <Badge variant="outline">{product.category.name}</Badge>
               )}
             </div>
 
+            {/* Title */}
+            <h1 className="text-3xl lg:text-4xl font-extrabold text-[#1c1b1b] mb-3 tracking-tight">
+              {product.name}
+            </h1>
+
+            {/* Seller attribution */}
+            {product.sellerProfile && (
+              <div className="mb-6">
+                <SellerAttribution
+                  seller={{
+                    businessName: product.sellerProfile.businessName,
+                    id: product.sellerProfile.userId ?? product.sellerProfile.id,
+                  }}
+                  rating={product.avgRating}
+                  reviewCount={product._count?.ratings}
+                />
+              </div>
+            )}
+
+            {/* Price */}
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-4xl font-black text-primary-600">
-                {product.priceInCents ? `₹${(product.priceInCents / 100).toLocaleString('en-IN')}` : 'Custom Price'}
+                {product.priceInCents ? formatMoney(product.priceInCents) : 'Custom Price'}
               </span>
               {product.compareAtPriceInCents && (
                 <span className="text-xl text-[#78716c] line-through">
-                  ₹{(product.compareAtPriceInCents / 100).toLocaleString('en-IN')}
+                  {formatMoney(product.compareAtPriceInCents)}
                 </span>
               )}
             </div>
 
-            <p className="text-[#78716c] mb-8 leading-relaxed text-lg">{product.description}</p>
+            {/* Description */}
+            <p className="text-[#78716c] mb-8 leading-relaxed text-lg">
+              {product.description}
+            </p>
 
-            {/* Info indicators */}
+            {/* ── Info indicators ─────────────────────────────────── */}
             <div className="space-y-3 mb-8">
+              {/* Stock indicator for Ready Stock */}
               {product.productType === 'READY_STOCK' && (
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                     <Package className="h-4 w-4 text-green-600" />
                   </div>
-                  <span className="font-medium">{product.stockQuantity > 0 ? `${product.stockQuantity} in stock` : 'Out of stock'}</span>
+                  <span className="font-medium">
+                    {product.stockQuantity > 0
+                      ? `${product.stockQuantity} in stock`
+                      : 'Out of stock'}
+                  </span>
                 </div>
               )}
-              {product.leadTimeDays && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Clock className="h-4 w-4 text-amber-600" />
-                  </div>
-                  <span className="font-medium">Processing time: {product.leadTimeDays} days</span>
-                </div>
-              )}
-              <div className="flex items-center gap-3 text-sm">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                </div>
-                <span className="font-medium">{returnPolicyLabel[product.returnPolicy] || product.returnPolicy}</span>
-              </div>
+
+              {/* Lead time */}
+              <LeadTimeIndicator
+                productType={product.productType}
+                leadTimeDays={product.leadTimeDays}
+              />
+
+              {/* Return policy */}
+              <ReturnPolicyCallout
+                productType={product.productType}
+                returnPolicy={product.returnPolicy}
+              />
             </div>
 
-            {/* Add to Cart */}
-            {product.productType !== 'ON_DEMAND' && product.priceInCents && (
-              <AddToCartButton productId={product.id} disabled={product.productType === 'READY_STOCK' && product.stockQuantity <= 0} />
-            )}
+            {/* ── Add to Cart ─────────────────────────────────────── */}
+            <AddToCartSection
+              productId={product.id}
+              stockQuantity={product.stockQuantity}
+              productType={product.productType}
+              priceInCents={product.priceInCents}
+            />
 
-            {/* Product Details */}
+            {/* ── Product Details (meta) ──────────────────────────── */}
             {product.meta && (
               <Card className="mt-8 border-0 shadow-sm">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-lg mb-4">Product Details</h3>
                   <dl className="grid grid-cols-2 gap-4 text-sm">
                     {product.meta.materials && (
-                      <><dt className="text-[#78716c]">Materials</dt><dd className="font-medium">{(product.meta.materials as string[]).join(', ')}</dd></>
+                      <>
+                        <dt className="text-[#78716c]">Materials</dt>
+                        <dd className="font-medium">
+                          {(product.meta.materials as string[]).join(', ')}
+                        </dd>
+                      </>
                     )}
                     {product.meta.dimensions && (
-                      <><dt className="text-[#78716c]">Dimensions</dt><dd className="font-medium">{product.meta.dimensions as string}</dd></>
+                      <>
+                        <dt className="text-[#78716c]">Dimensions</dt>
+                        <dd className="font-medium">{product.meta.dimensions as string}</dd>
+                      </>
                     )}
                     {product.meta.weight && (
-                      <><dt className="text-[#78716c]">Weight</dt><dd className="font-medium">{product.meta.weight as string}</dd></>
+                      <>
+                        <dt className="text-[#78716c]">Weight</dt>
+                        <dd className="font-medium">{product.meta.weight as string}</dd>
+                      </>
                     )}
                   </dl>
                 </CardContent>
@@ -146,43 +260,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {/* Reviews */}
-        {product.ratings && product.ratings.length > 0 && (
-          <section className="mt-16 pb-8">
-            <h2 className="text-2xl font-extrabold text-[#1c1b1b] mb-2">Customer Reviews</h2>
-            <div className="flex items-center gap-2 mb-8">
-              <div className="flex">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star key={i} className={`h-5 w-5 ${i < Math.round(product.avgRating) ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
-                ))}
-              </div>
-              <span className="font-bold text-lg">{product.avgRating.toFixed(1)}</span>
-              <span className="text-[#78716c]">({product._count?.ratings} reviews)</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {product.ratings.map((rating: any) => (
-                <Card key={rating.id} className="border-0 shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-primary-600/10 flex items-center justify-center text-primary-600 font-bold text-sm">
-                        {rating.user?.name?.charAt(0) || 'U'}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm">{rating.user?.name}</p>
-                        <div className="flex">
-                          {Array.from({ length: 5 }, (_, i) => (
-                            <Star key={i} className={`h-3 w-3 ${i < rating.score ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    {rating.review && <p className="text-sm text-[#78716c] leading-relaxed">{rating.review}</p>}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* ── Reviews section ───────────────────────────────────── */}
+        <ReviewList
+          ratings={product.ratings ?? []}
+          avgRating={product.avgRating}
+        />
       </div>
     </div>
   );

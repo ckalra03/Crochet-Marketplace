@@ -1,111 +1,204 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+/**
+ * Admin Warehouse / QC Dashboard -- DataTable-based warehouse item management.
+ *
+ * Features:
+ * - Sortable columns: Order Number, Product, Seller, Status, Received Date, Actions
+ * - Status filter tabs: All, Awaiting, Received, QC Pending, QC Passed, QC Failed, Packed
+ * - Context-sensitive actions per row based on item status
+ * - Click through to /admin/warehouse/{id} for QC and dispatch forms
+ */
+
+import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import api from '@/lib/api/client';
+import { DataTable, DataTableColumnHeader } from '@/components/data-table/data-table';
+import { StatusBadge } from '@/components/feedback/status-badge';
+import { useAdminWarehouse, useReceiveWarehouseItem } from '@/lib/hooks/use-admin';
+import { formatDate } from '@/lib/utils/format';
 import { toast } from 'sonner';
+import { Eye, PackageCheck } from 'lucide-react';
+
+/** Status filter tabs. */
+const STATUS_TABS = [
+  '',                   // All
+  'AWAITING_ARRIVAL',
+  'RECEIVED',
+  'QC_PENDING',
+  'QC_PASSED',
+  'QC_FAILED',
+  'PACKED',
+];
+
+/** Shape of a warehouse item row from the API. */
+interface WarehouseRow {
+  id: string;
+  status: string;
+  receivedAt?: string;
+  createdAt: string;
+  orderItem?: {
+    order?: { orderNumber: string };
+    product?: { name: string };
+  };
+  sellerProfile?: { businessName: string };
+}
 
 export default function AdminWarehousePage() {
-  const [items, setItems] = useState<any[]>([]);
-  const [filter, setFilter] = useState('');
-  const [trackingData, setTrackingData] = useState<Record<string, { trackingNumber: string; shippingCarrier: string }>>({});
+  const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState('');
 
-  async function fetchItems() {
-    const params = filter ? `?status=${filter}` : '';
-    const { data } = await api.get(`/admin/warehouse${params}`);
-    setItems(data.items);
+  const { data, isLoading, refetch } = useAdminWarehouse(
+    statusFilter ? { status: statusFilter } : undefined,
+  );
+  const items: WarehouseRow[] = data?.items ?? [];
+
+  const receiveItem = useReceiveWarehouseItem();
+
+  /** Mark a warehouse item as received. */
+  function handleReceive(id: string) {
+    receiveItem.mutate(id, {
+      onSuccess: () => {
+        toast.success('Item marked as received');
+        refetch();
+      },
+      onError: (err: any) => {
+        toast.error(err?.response?.data?.error || 'Failed to receive item');
+      },
+    });
   }
 
-  useEffect(() => { fetchItems(); }, [filter]);
+  /** Column definitions. */
+  const columns = useMemo<ColumnDef<WarehouseRow, any>[]>(
+    () => [
+      {
+        accessorKey: 'orderNumber',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Order Number" />,
+        accessorFn: (row) => row.orderItem?.order?.orderNumber ?? 'N/A',
+        cell: ({ getValue }) => (
+          <span className="font-mono text-sm">{getValue() as string}</span>
+        ),
+      },
+      {
+        accessorKey: 'productName',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Product" />,
+        accessorFn: (row) => row.orderItem?.product?.name ?? 'N/A',
+        cell: ({ getValue }) => (
+          <span className="text-sm font-medium">{getValue() as string}</span>
+        ),
+      },
+      {
+        accessorKey: 'seller',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Seller" />,
+        accessorFn: (row) => row.sellerProfile?.businessName ?? 'N/A',
+        cell: ({ getValue }) => (
+          <span className="text-sm">{getValue() as string}</span>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
+      {
+        accessorKey: 'receivedAt',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Received Date" />,
+        cell: ({ row }) => (
+          <span className="text-sm">
+            {row.original.receivedAt ? formatDate(row.original.receivedAt) : '--'}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: ({ row }) => {
+          const item = row.original;
 
-  async function receive(id: string) {
-    try { await api.post(`/admin/warehouse/${id}/receive`); toast.success('Item received'); fetchItems(); }
-    catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
-  }
+          return (
+            <div className="flex gap-2">
+              {/* Awaiting -> Mark Received */}
+              {item.status === 'AWAITING_ARRIVAL' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleReceive(item.id)}
+                  disabled={receiveItem.isPending}
+                >
+                  <PackageCheck className="h-4 w-4 mr-1" />
+                  Mark Received
+                </Button>
+              )}
 
-  async function qcPass(id: string) {
-    try {
-      await api.post(`/admin/warehouse/${id}/qc`, {
-        result: 'PASS',
-        checklist: { looseEnds: true, finishingConsistency: true, correctDimensions: true, colorMatch: true, stitchQuality: true, packagingAdequate: true },
-      });
-      toast.success('QC Passed'); fetchItems();
-    } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
-  }
+              {/* QC Pending -> Perform QC (opens detail page) */}
+              {item.status === 'QC_PENDING' && (
+                <Button
+                  size="sm"
+                  onClick={() => router.push(`/admin/warehouse/${item.id}`)}
+                >
+                  Perform QC
+                </Button>
+              )}
 
-  async function qcFail(id: string) {
-    const notes = prompt('Defect notes:');
-    try {
-      await api.post(`/admin/warehouse/${id}/qc`, {
-        result: 'FAIL',
-        checklist: { looseEnds: false, finishingConsistency: false, correctDimensions: true, colorMatch: true, stitchQuality: false, packagingAdequate: true },
-        defectNotes: notes || 'Quality issues found',
-      });
-      toast.success('QC Failed — seller notified'); fetchItems();
-    } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
-  }
+              {/* QC Passed -> Dispatch (opens detail page) */}
+              {(item.status === 'QC_PASSED' || item.status === 'PACKED') && (
+                <Button
+                  size="sm"
+                  onClick={() => router.push(`/admin/warehouse/${item.id}`)}
+                >
+                  Dispatch
+                </Button>
+              )}
 
-  async function dispatch(id: string) {
-    const td = trackingData[id];
-    if (!td?.trackingNumber || !td?.shippingCarrier) { toast.error('Enter tracking details'); return; }
-    try {
-      await api.post(`/admin/warehouse/${id}/dispatch`, td);
-      toast.success('Item dispatched'); fetchItems();
-    } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
-  }
-
-  const statusColors: Record<string, any> = {
-    AWAITING_ARRIVAL: 'warning', QC_PENDING: 'info', QC_PASSED: 'success',
-    QC_FAILED: 'destructive', DISPATCHED: 'success', PACKED: 'info',
-  };
+              {/* Always allow viewing detail */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push(`/admin/warehouse/${item.id}`)}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        },
+      },
+    ],
+    [router, receiveItem.isPending],
+  );
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Warehouse / QC Dashboard</h1>
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {['', 'AWAITING_ARRIVAL', 'QC_PENDING', 'QC_PASSED', 'QC_FAILED', 'DISPATCHED'].map((s) => (
-          <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
-            {s?.replace(/_/g, ' ') || 'All'}
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Warehouse / QC Dashboard</h1>
+
+      {/* Status filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {STATUS_TABS.map((s) => (
+          <Button
+            key={s}
+            variant={statusFilter === s ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter(s)}
+          >
+            {s ? s.replace(/_/g, ' ') : 'All'}
           </Button>
         ))}
       </div>
-      <div className="space-y-3">
-        {items.map((item: any) => (
-          <Card key={item.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <p className="font-semibold text-sm">{item.orderItem?.product?.name}</p>
-                  <p className="text-xs text-muted-foreground">Order: {item.orderItem?.order?.orderNumber} · Seller: {item.sellerProfile?.businessName}</p>
-                </div>
-                <Badge variant={statusColors[item.status] || 'default'}>{item.status.replace(/_/g, ' ')}</Badge>
-              </div>
-              <div className="flex gap-2 mt-3 flex-wrap">
-                {item.status === 'AWAITING_ARRIVAL' && <Button size="sm" onClick={() => receive(item.id)}>Mark Received</Button>}
-                {item.status === 'QC_PENDING' && (
-                  <>
-                    <Button size="sm" onClick={() => qcPass(item.id)}>QC Pass</Button>
-                    <Button size="sm" variant="destructive" onClick={() => qcFail(item.id)}>QC Fail</Button>
-                  </>
-                )}
-                {item.status === 'QC_PASSED' && (
-                  <div className="flex gap-2 items-center w-full">
-                    <Input placeholder="Tracking #" className="w-40" value={trackingData[item.id]?.trackingNumber || ''}
-                      onChange={(e) => setTrackingData({ ...trackingData, [item.id]: { ...trackingData[item.id], trackingNumber: e.target.value, shippingCarrier: trackingData[item.id]?.shippingCarrier || '' } })} />
-                    <Input placeholder="Carrier" className="w-32" value={trackingData[item.id]?.shippingCarrier || ''}
-                      onChange={(e) => setTrackingData({ ...trackingData, [item.id]: { ...trackingData[item.id], shippingCarrier: e.target.value, trackingNumber: trackingData[item.id]?.trackingNumber || '' } })} />
-                    <Button size="sm" onClick={() => dispatch(item.id)}>Dispatch</Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {items.length === 0 && <p className="text-center py-10 text-muted-foreground">No warehouse items found</p>}
-      </div>
+
+      {/* Loading state */}
+      {isLoading && (
+        <p className="text-center py-10 text-muted-foreground">Loading warehouse items...</p>
+      )}
+
+      {/* Warehouse items table */}
+      {!isLoading && (
+        <DataTable
+          columns={columns}
+          data={items}
+          searchPlaceholder="Search by order number..."
+          searchColumn="orderNumber"
+        />
+      )}
     </div>
   );
 }

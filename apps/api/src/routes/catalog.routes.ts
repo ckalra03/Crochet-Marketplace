@@ -1,9 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { catalogService } from '../modules/catalog/catalog.service';
+import { cacheMiddleware } from '../middleware/cache';
+import { optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/products', async (req: Request, res: Response, next: NextFunction) => {
+// Cache product listing for 30 seconds (changes frequently with filters)
+router.get('/products', cacheMiddleware(30), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await catalogService.getProducts({
       search: req.query.search as string,
@@ -22,9 +25,12 @@ router.get('/products', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
-router.get('/products/:slug', async (req: Request, res: Response, next: NextFunction) => {
+// Cache individual product pages for 60 seconds
+// Uses optionalAuth so authenticated users get isWishlisted flag
+router.get('/products/:slug', optionalAuth, cacheMiddleware(60), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const product = await catalogService.getProductBySlug(req.params.slug);
+    const userId = req.user?.userId;
+    const product = await catalogService.getProductBySlug(req.params.slug, userId);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
@@ -32,7 +38,8 @@ router.get('/products/:slug', async (req: Request, res: Response, next: NextFunc
   }
 });
 
-router.get('/categories', async (_req: Request, res: Response, next: NextFunction) => {
+// Cache categories for 5 minutes (rarely changes)
+router.get('/categories', cacheMiddleware(300), async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const categories = await catalogService.getCategories();
     res.json(categories);
@@ -41,7 +48,8 @@ router.get('/categories', async (_req: Request, res: Response, next: NextFunctio
   }
 });
 
-router.get('/categories/:slug/products', async (req: Request, res: Response, next: NextFunction) => {
+// Cache category product listings for 30 seconds
+router.get('/categories/:slug/products', cacheMiddleware(30), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const category = await catalogService.getCategoryBySlug(req.params.slug);
     if (!category) return res.status(404).json({ error: 'Category not found' });

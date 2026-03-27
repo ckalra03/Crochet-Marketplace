@@ -8,6 +8,12 @@ import { returnService } from '../modules/returns/return.service';
 import { disputeService } from '../modules/disputes/dispute.service';
 import { payoutService } from '../modules/seller-finance/payout.service';
 import { adminDashboardService } from '../modules/dashboard/admin-dashboard.service';
+import { analyticsService } from '../modules/analytics/analytics.service';
+import { settingsService } from '../modules/settings/settings.service';
+import { slaService } from '../modules/sla/sla.service';
+import { penaltyService } from '../modules/penalties/penalty.service';
+import { performanceService } from '../modules/performance/performance.service';
+import { getPayoutQueue } from '../jobs';
 import { reviewReturnSchema } from '@crochet-hub/shared';
 import { validate } from '../middleware/validate';
 import { rejectSellerSchema } from '@crochet-hub/shared';
@@ -203,6 +209,22 @@ router.post(
   },
 );
 
+// Assign a seller to an on-demand request
+router.post(
+  '/on-demand-requests/:id/assign-seller',
+  validate(z.object({
+    sellerProfileId: z.string().uuid(),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await onDemandService.assignSeller(req.params.id, req.body.sellerProfileId, req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ─── Warehouse / Fulfillment ───────────────────────
 router.get('/warehouse', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -274,6 +296,22 @@ router.post('/returns/:id/review', validate(reviewReturnSchema), async (req: Req
   }
 });
 
+// Initiate refund for an approved return
+router.post(
+  '/returns/:id/initiate-refund',
+  validate(z.object({
+    refundReference: z.string().min(1),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await returnService.initiateRefund(req.params.id, req.body.refundReference, req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ─── Disputes ─────────────────────────────────────
 router.get('/disputes', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -344,5 +382,198 @@ router.post(
     }
   },
 );
+
+// Trigger payout generation as a background job (BullMQ).
+// Falls back to synchronous execution when Redis/job queues are unavailable.
+router.post(
+  '/payouts/generate-cycle',
+  validate(z.object({ cycleStart: z.string(), cycleEnd: z.string() })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const queue = getPayoutQueue();
+
+      if (queue) {
+        // Enqueue as a background job
+        const job = await queue.add('payout-cycle', {
+          cycleStart: req.body.cycleStart,
+          cycleEnd: req.body.cycleEnd,
+          adminId: req.user!.userId,
+        });
+        res.status(202).json({
+          message: 'Payout generation job enqueued',
+          jobId: job.id,
+          cycleStart: req.body.cycleStart,
+          cycleEnd: req.body.cycleEnd,
+        });
+      } else {
+        // Fallback: run synchronously when job queues are unavailable
+        const result = await payoutService.generatePayoutCycle(req.user!.userId, req.body);
+        res.status(201).json(result);
+      }
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── Analytics ──────────────────────────────────────
+
+router.get('/analytics/revenue', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const period = (req.query.period as 'daily' | 'weekly' | 'monthly') || 'monthly';
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : new Date();
+    const data = await analyticsService.getRevenueAnalytics(period, startDate, endDate);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/analytics/orders', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : new Date();
+    const data = await analyticsService.getOrderAnalytics(startDate, endDate);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/analytics/sellers', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const data = await analyticsService.getSellerAnalytics(limit);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/analytics/categories', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const data = await analyticsService.getCategoryAnalytics(limit);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Platform Settings ──────────────────────────────
+
+router.get('/settings', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const settings = await settingsService.getAllSettings();
+    res.json(settings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put(
+  '/settings',
+  validate(z.object({ key: z.string().min(1).max(100), value: z.any() })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await settingsService.updateSetting(req.body.key, req.body.value);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ─── SLA Monitoring ─────────────────────────────────
+
+router.get('/sla/dashboard', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const dashboard = await slaService.getSlaDashboard();
+    res.json(dashboard);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/sla/breaches', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await slaService.getSlaBreaches({
+      slaType: req.query.slaType as string,
+      sellerProfileId: req.query.sellerProfileId as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Penalties ──────────────────────────────────────
+
+router.get('/penalties', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await penaltyService.getPenalties({
+      status: req.query.status as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  '/penalties',
+  validate(z.object({
+    sellerProfileId: z.string().uuid(),
+    type: z.enum(['QC_FAILURE', 'SLA_BREACH', 'RETURN_LIABILITY', 'OTHER']),
+    amountInCents: z.number().int().positive(),
+    reason: z.string().min(3).max(1000),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const penalty = await penaltyService.createPenalty(req.body, req.user!.userId);
+      res.status(201).json(penalty);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.post('/penalties/:id/waive', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const penalty = await penaltyService.waivePenalty(req.params.id, req.user!.userId);
+    res.json(penalty);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Seller Performance ─────────────────────────────
+
+router.get('/performance/sellers', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await performanceService.getAllSellerPerformance({
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+      sortBy: (req.query.sortBy as string) || 'avgRating',
+      order: (req.query.order as 'asc' | 'desc') || 'desc',
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;

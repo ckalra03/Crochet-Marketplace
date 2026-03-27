@@ -5,6 +5,9 @@ import { orderService } from '../modules/orders/order.service';
 import { payoutService } from '../modules/seller-finance/payout.service';
 import { ratingService } from '../modules/ratings/rating.service';
 import { sellerDashboardService } from '../modules/dashboard/seller-dashboard.service';
+import { performanceService } from '../modules/performance/performance.service';
+import { penaltyService } from '../modules/penalties/penalty.service';
+import { slaService } from '../modules/sla/sla.service';
 import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
@@ -197,6 +200,51 @@ router.delete('/products/:id/media/:mediaId', async (req: Request, res: Response
     const profile = await sellerService.getProfile(req.user!.userId);
     await productService.removeMedia(req.params.id, req.params.mediaId, profile.id);
     res.json({ message: 'Media removed' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Performance Metrics ──────────────────────────────
+
+router.get('/performance', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const metrics = await performanceService.getPerformanceMetrics(profile.id);
+    res.json(metrics);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Seller Penalties ─────────────────────────────────
+
+router.get('/penalties', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const result = await penaltyService.getSellerPenalties(profile.id, {
+      status: req.query.status as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Seller SLA Breaches ──────────────────────────────
+
+router.get('/sla/breaches', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const result = await slaService.getSlaBreaches({
+      sellerProfileId: profile.id,
+      slaType: req.query.slaType as string,
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
   } catch (err) {
     next(err);
   }

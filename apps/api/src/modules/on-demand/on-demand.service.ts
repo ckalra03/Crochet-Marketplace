@@ -136,6 +136,41 @@ export class OnDemandService {
     return { requests, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
+  // Assign a seller to an on-demand request (admin action)
+  async assignSeller(requestId: string, sellerProfileId: string, adminId: string) {
+    // Validate the request exists and is in an assignable status
+    const request = await prisma.onDemandRequest.findUnique({ where: { id: requestId } });
+    if (!request) throw new AppError('Request not found', 404);
+    if (request.status !== 'UNDER_REVIEW' && request.status !== 'QUOTED') {
+      throw new AppError('Request must be in UNDER_REVIEW or QUOTED status to assign a seller', 400);
+    }
+
+    // Validate the seller exists and is approved
+    const seller = await prisma.sellerProfile.findUnique({ where: { id: sellerProfileId } });
+    if (!seller) throw new AppError('Seller profile not found', 404);
+    if (seller.status !== 'APPROVED') {
+      throw new AppError('Seller must be APPROVED to be assigned', 400);
+    }
+
+    // Update any existing quotes for this request to reference the assigned seller
+    await prisma.quote.updateMany({
+      where: { onDemandRequestId: requestId, sellerProfileId: null },
+      data: { sellerProfileId },
+    });
+
+    log.info(`Seller ${sellerProfileId} assigned to request ${request.requestNumber}`, { adminId });
+
+    await writeAuditLog({
+      userId: adminId,
+      action: 'on_demand.seller_assigned',
+      auditableType: 'OnDemandRequest',
+      auditableId: requestId,
+      newValues: { sellerProfileId, requestNumber: request.requestNumber },
+    });
+
+    return this.getRequestDetail(requestId);
+  }
+
   async createQuote(requestId: string, adminId: string, data: {
     priceInCents: number;
     estimatedDays: number;

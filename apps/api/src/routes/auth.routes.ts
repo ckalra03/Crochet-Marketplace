@@ -2,7 +2,13 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authService } from '../modules/auth/auth.service';
 import { validate } from '../middleware/validate';
 import { authenticate } from '../middleware/auth';
-import { registerSchema, loginSchema, refreshTokenSchema } from '@crochet-hub/shared';
+import {
+  registerSchema,
+  loginSchema,
+  refreshTokenSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+} from '@crochet-hub/shared';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -11,6 +17,13 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: process.env.NODE_ENV === 'development' ? 200 : 20,
   message: { error: 'Too many attempts, please try again later' },
+});
+
+// Stricter rate limit for password reset endpoints: 3 requests per hour per IP
+const passwordResetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: process.env.NODE_ENV === 'development' ? 50 : 3,
+  message: { error: 'Too many password reset attempts, please try again later' },
 });
 
 router.post(
@@ -47,6 +60,36 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.refresh(req.body.refreshToken);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// Forgot password — always returns success to avoid leaking user existence
+router.post(
+  '/forgot-password',
+  passwordResetLimiter,
+  validate(forgotPasswordSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.forgotPassword(req.body.email);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// Reset password — validates token and sets new password
+router.post(
+  '/reset-password',
+  passwordResetLimiter,
+  validate(resetPasswordSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.resetPassword(req.body.token, req.body.password);
       res.json(result);
     } catch (err) {
       next(err);

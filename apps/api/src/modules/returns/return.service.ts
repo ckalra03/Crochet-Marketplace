@@ -169,6 +169,38 @@ export class ReturnService {
 
     return updated;
   }
+  // Initiate a refund for an approved return (admin action)
+  async initiateRefund(returnId: string, refundReference: string, adminId: string) {
+    const returnRecord = await prisma.return.findUnique({ where: { id: returnId } });
+    if (!returnRecord) throw new AppError('Return not found', 404);
+    if (returnRecord.status !== 'APPROVED') {
+      throw new AppError('Return must be in APPROVED status to initiate a refund', 400);
+    }
+
+    // Update status to REFUND_INITIATED and store reference in adminNotes
+    const updated = await prisma.return.update({
+      where: { id: returnId },
+      data: {
+        status: 'REFUND_INITIATED' as any,
+        adminNotes: returnRecord.adminNotes
+          ? `${returnRecord.adminNotes}\nRefund ref: ${refundReference}`
+          : `Refund ref: ${refundReference}`,
+      },
+    });
+
+    log.info(`Refund initiated for return ${returnRecord.returnNumber}: ${refundReference}`, { adminId });
+
+    await writeAuditLog({
+      userId: adminId,
+      action: 'return.refund_initiated',
+      auditableType: 'Return',
+      auditableId: returnId,
+      oldValues: { status: 'APPROVED' },
+      newValues: { status: 'REFUND_INITIATED', refundReference },
+    });
+
+    return updated;
+  }
 }
 
 export const returnService = new ReturnService();

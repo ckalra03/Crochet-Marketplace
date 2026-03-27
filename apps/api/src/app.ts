@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import compression from 'compression';
 import helmet from 'helmet';
 import { env } from './config/env';
 import { requestIdMiddleware } from './middleware/request-id';
@@ -19,10 +20,13 @@ app.use(requestLogger);
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin: env.CORS_ORIGIN.includes(',') ? env.CORS_ORIGIN.split(',').map((o) => o.trim()) : env.CORS_ORIGIN,
     credentials: true,
   }),
 );
+
+// Response compression (gzip/deflate)
+app.use(compression());
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));

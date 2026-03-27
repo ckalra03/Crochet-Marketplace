@@ -1,5 +1,6 @@
 import prisma from '../../config/database';
 import { Prisma } from '@prisma/client';
+import { wishlistService } from '../wishlist/wishlist.service';
 
 export class CatalogService {
   async getProducts(params: {
@@ -75,7 +76,7 @@ export class CatalogService {
     };
   }
 
-  async getProductBySlug(slug: string) {
+  async getProductBySlug(slug: string, userId?: string) {
     const product = await prisma.product.findFirst({
       where: { slug, status: 'APPROVED', isActive: true, deletedAt: null },
       include: {
@@ -100,7 +101,12 @@ export class CatalogService {
       _avg: { score: true },
     });
 
-    return { ...product, avgRating: avgRating._avg.score || 0 };
+    // Check wishlist status if user is authenticated
+    const isWishlisted = userId
+      ? await wishlistService.isWishlisted(userId, product.id)
+      : false;
+
+    return { ...product, avgRating: avgRating._avg.score || 0, isWishlisted };
   }
 
   async getCategories() {

@@ -222,10 +222,12 @@ model User {
   passwordHash    String    @map("password_hash") @db.VarChar(255)
   phone           String?   @db.VarChar(20)
   role            Role      @default(BUYER)
-  isActive        Boolean   @default(true) @map("is_active")
-  deletedAt       DateTime? @map("deleted_at")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  isActive             Boolean   @default(true) @map("is_active")
+  passwordResetToken   String?   @map("password_reset_token") @db.VarChar(255)
+  passwordResetExpiry  DateTime? @map("password_reset_expiry")
+  deletedAt            DateTime? @map("deleted_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
   refreshTokens RefreshToken[]
 
@@ -247,6 +249,8 @@ model User {
   auditLogs            AuditLog[]
   penaltiesCreated     SellerPenalty[]   @relation("PenaltyCreator")
   tendersCreated       Tender[]         @relation("TenderCreator")
+  wishlists            Wishlist[]
+  notifications        Notification[]
 
   @@index([role], name: "idx_users_role")
   @@index([createdAt], name: "idx_users_created_at")
@@ -359,6 +363,7 @@ model Product {
   cartItems  CartItem[]
   orderItems OrderItem[]
   ratings    Rating[]
+  wishlists  Wishlist[]
 
   @@index([productType, isActive, status], name: "idx_products_type_active")
   @@index([sellerProfileId], name: "idx_products_seller")
@@ -741,6 +746,15 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model PlatformSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(100)
+  value     Json     @db.JsonB
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}
+
 // ─── PHASE 2 MODELS ────────────────────────────────────
 
 model SellerPerformanceMetrics {
@@ -860,4 +874,39 @@ model SellerTrustTier {
   sellers SellerProfile[]
 
   @@map("seller_trust_tiers")
+}
+
+// ─── WISHLIST ─────────────────────────────────────────
+
+model Wishlist {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId], name: "uq_wishlist_user_product")
+  @@index([userId], name: "idx_wishlist_user")
+  @@map("wishlists")
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String    @db.VarChar(50)
+  title     String    @db.VarChar(255)
+  body      String?   @db.Text
+  data      Json?     @db.JsonB
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt], name: "idx_notifications_user_read")
+  @@index([createdAt], name: "idx_notifications_created")
+  @@map("notifications")
 }

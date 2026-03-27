@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  API_PORT: z.coerce.number().default(4000),
+  // Render sets PORT; locally we use API_PORT. Accept either.
+  API_PORT: z.coerce.number().default(Number(process.env.PORT) || 4000),
   DATABASE_URL: z.string(),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
   JWT_ACCESS_SECRET: z.string().min(32),
@@ -16,6 +17,7 @@ const envSchema = z.object({
   SMTP_PORT: z.coerce.number().default(587),
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
 });
 
 export type Env = z.infer<typeof envSchema>;

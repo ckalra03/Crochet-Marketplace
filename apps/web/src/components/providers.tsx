@@ -5,6 +5,8 @@ import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/stores/auth-store';
+import { SocketProvider } from '@/lib/socket/socket-provider';
+import { SocketQueryInvalidator } from '@/lib/socket/socket-query-invalidator';
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
@@ -28,7 +30,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <AuthInitializer>
-          {children}
+          <SocketProvider>
+            <SocketQueryInvalidator />
+            {children}
+          </SocketProvider>
           <Toaster position="top-right" richColors />
         </AuthInitializer>
       </ThemeProvider>

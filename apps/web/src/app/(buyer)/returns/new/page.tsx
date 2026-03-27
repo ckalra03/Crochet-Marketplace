@@ -8,12 +8,13 @@
  * Includes breadcrumb navigation.
  */
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ReturnForm } from '@/components/returns/return-form';
 import { ChevronRight } from 'lucide-react';
 
-export default function NewReturnPage() {
+function NewReturnContent() {
   const searchParams = useSearchParams();
 
   // Read optional pre-selection from URL
@@ -35,5 +36,13 @@ export default function NewReturnPage() {
 
       <ReturnForm orderNumber={orderNumber} orderItemId={orderItemId} />
     </div>
+  );
+}
+
+export default function NewReturnPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto max-w-2xl px-4 py-8">Loading...</div>}>
+      <NewReturnContent />
+    </Suspense>
   );
 }

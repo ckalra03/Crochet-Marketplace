@@ -20,7 +20,8 @@ services:
       pnpm install --frozen-lockfile &&
       pnpm --filter @crochet-hub/shared build &&
       pnpm --filter @crochet-hub/api run db:generate &&
-      pnpm --filter @crochet-hub/api build
+      pnpm --filter @crochet-hub/api build &&
+      cd apps/api && npx prisma db push --skip-generate && npx tsx prisma/seed.ts || true
 
     # ── Start ──────────────────────────────────────────
     startCommand: node apps/api/dist/server.js

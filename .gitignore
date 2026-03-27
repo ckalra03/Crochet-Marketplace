@@ -39,3 +39,9 @@ blob-report/
 
 # Uploads
 uploads/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Claude Code local settings
+.claude/settings.local.json

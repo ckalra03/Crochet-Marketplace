@@ -1,0 +1,74 @@
+# Render Blueprint — deploys the Express.js backend as a web service.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this file to your GitHub repo
+#   2. Go to https://dashboard.render.com/blueprints → New Blueprint Instance
+#   3. Connect your repo → Render auto-detects this file
+#   4. Fill in the environment variable values when prompted
+
+services:
+  - type: web
+    name: crochet-hub-api
+    runtime: node
+    region: singapore  # Change to your nearest region
+    plan: free         # Free tier: 750 hrs/month, auto-sleep after 15 min inactivity
+
+    # ── Build ──────────────────────────────────────────
+    buildCommand: |
+      npm install -g pnpm &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @crochet-hub/shared build &&
+      pnpm --filter @crochet-hub/api run db:generate &&
+      pnpm --filter @crochet-hub/api build
+
+    # ── Start ──────────────────────────────────────────
+    startCommand: node apps/api/dist/server.js
+
+    # ── Health Check ──────────────────────────────────
+    healthCheckPath: /health
+
+    # ── Environment Variables ─────────────────────────
+    # Values marked "sync: false" must be set manually in the Render dashboard
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: API_PORT
+        value: "4000"
+
+      - key: DATABASE_URL
+        sync: false  # Set to your Neon connection string
+
+      - key: JWT_ACCESS_SECRET
+        generateValue: true  # Render generates a random 64-char secret
+
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: "15m"
+
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: "7d"
+
+      - key: CORS_ORIGIN
+        sync: false  # Set to your Vercel frontend URL (e.g., https://crochet-hub.vercel.app)
+
+      - key: REDIS_URL
+        sync: false  # Set to your Upstash Redis URL (optional)
+
+      - key: PAYMENT_GATEWAY
+        value: "mock"  # Change to razorpay/stripe for production
+
+      - key: LOG_LEVEL
+        value: "info"
+
+      - key: LOG_DIR
+        value: "/tmp/logs"
+
+      - key: SMTP_HOST
+        value: "smtp.ethereal.email"
+
+      - key: SMTP_PORT
+        value: "587"

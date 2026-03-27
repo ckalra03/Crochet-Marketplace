@@ -18,8 +18,9 @@ test.describe('Auth API', () => {
   });
 
   test('rejects duplicate registration', async ({ request }) => {
+    // Use the seeded buyer email which is guaranteed to already exist
     const res = await request.post(`${API}/auth/register`, {
-      data: { name: 'Dup User', email: testEmail, password: 'securepass123' },
+      data: { name: 'Dup User', email: 'buyer@test.com', password: 'securepass123' },
     });
     expect(res.status()).toBe(409);
   });

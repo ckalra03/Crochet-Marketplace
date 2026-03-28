@@ -3,6 +3,7 @@ import { api } from './client';
 export interface CheckoutData {
   shippingAddressId: string;
   notes?: string;
+  paymentMethod?: 'COD';
 }
 
 /** Create an order from the current cart contents. */

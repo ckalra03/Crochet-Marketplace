@@ -79,6 +79,7 @@ export default function CheckoutPage() {
       {
         shippingAddressId: selectedAddress,
         notes: notes || undefined,
+        paymentMethod: 'COD', // COD is the only payment method for now
       },
       {
         onSuccess: (data: any) => {

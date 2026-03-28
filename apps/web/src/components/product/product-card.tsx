@@ -15,6 +15,8 @@ export interface ProductCardData {
   compareAtPriceInCents?: number | null;
   productType: 'READY_STOCK' | 'MADE_TO_ORDER' | 'ON_DEMAND';
   sellerProfile?: { businessName: string } | null;
+  /** Media array from API — use first item's filePath as thumbnail */
+  media?: Array<{ filePath: string; type?: string; isPrimary?: boolean }>;
 }
 
 /** Badge config per product type. */
@@ -58,7 +60,10 @@ const TYPE_GRADIENTS: Record<string, string> = {
  * - Entire card is a link to /products/{slug}
  */
 export function ProductCard({ product }: { product: ProductCardData }) {
+  // Use actual product media if available, fall back to hardcoded images
+  const primaryMedia = product.media?.find((m) => m.isPrimary) || product.media?.[0];
   const imgSrc =
+    primaryMedia?.filePath ||
     PRODUCT_IMAGES[product.slug as keyof typeof PRODUCT_IMAGES] ||
     PRODUCT_IMAGES.default;
   const typeConfig = PRODUCT_TYPE_CONFIG[product.productType] || PRODUCT_TYPE_CONFIG.READY_STOCK;

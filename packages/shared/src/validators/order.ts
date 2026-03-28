@@ -6,6 +6,8 @@ export const checkoutSchema = z.object({
   policyAcknowledged: z.boolean().refine((v) => v === true, {
     message: 'You must acknowledge the return policy',
   }),
+  // Payment method: COD is the only option for now
+  paymentMethod: z.enum(['COD']).optional().default('COD'),
 });
 
 export const cancelOrderSchema = z.object({

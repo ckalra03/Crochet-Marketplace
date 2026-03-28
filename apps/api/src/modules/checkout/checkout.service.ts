@@ -13,7 +13,7 @@ function generateOrderNumber(): string {
 }
 
 export class CheckoutService {
-  async createOrder(userId: string, data: { shippingAddressId: string; notes?: string }) {
+  async createOrder(userId: string, data: { shippingAddressId: string; notes?: string; paymentMethod?: 'COD' }) {
     const cart = await cartService.getCart(userId);
     if (cart.items.length === 0) throw new AppError('Cart is empty', 400);
 
@@ -84,8 +84,57 @@ export class CheckoutService {
       return newOrder;
     });
 
-    log.info(`Order created: ${order.orderNumber}`, { userId, orderId: order.id, total: order.totalInCents });
+    const paymentMethod = data.paymentMethod || 'COD';
 
+    log.info(`Order created: ${order.orderNumber}`, { userId, orderId: order.id, total: order.totalInCents, paymentMethod });
+
+    // COD flow: confirm order immediately, payment stays PENDING until delivery
+    if (paymentMethod === 'COD') {
+      await prisma.$transaction(async (tx) => {
+        // Create a COD payment record with INITIATED status (collected on delivery)
+        await tx.payment.create({
+          data: {
+            orderId: order.id,
+            gateway: 'MOCK', // Using MOCK since COD is not in PaymentGateway enum
+            gatewayTransactionId: `cod-${Date.now()}`,
+            amountInCents: order.totalInCents,
+            status: 'INITIATED',
+            method: 'COD',
+          },
+        });
+
+        // Set order to CONFIRMED (skip PENDING_PAYMENT), paymentStatus stays PENDING
+        await tx.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'CONFIRMED',
+            paymentStatus: 'PENDING',
+            placedAt: new Date(),
+          },
+        });
+
+        // Confirm all order items
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { status: 'CONFIRMED' },
+        });
+      });
+
+      await writeAuditLog({
+        userId,
+        action: 'order.created',
+        auditableType: 'Order',
+        auditableId: order.id,
+        newValues: { orderNumber: order.orderNumber, status: 'CONFIRMED', paymentMethod: 'COD', totalInCents: order.totalInCents },
+      });
+
+      return prisma.order.findUnique({
+        where: { id: order.id },
+        include: { items: true, payments: true, shippingAddress: true },
+      });
+    }
+
+    // Non-COD flow: use mock payment gateway (legacy behavior)
     await writeAuditLog({
       userId,
       action: 'order.created',
@@ -94,7 +143,6 @@ export class CheckoutService {
       newValues: { orderNumber: order.orderNumber, status: 'PENDING_PAYMENT', totalInCents: order.totalInCents },
     });
 
-    // For MVP mock payment: auto-confirm
     const confirmedOrder = await this.confirmPayment(order.id, {
       gateway: 'MOCK',
       gatewayTransactionId: `mock-${Date.now()}`,

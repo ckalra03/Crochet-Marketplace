@@ -15,6 +15,7 @@ router.post(
       const order = await checkoutService.createOrder(req.user!.userId, {
         shippingAddressId: req.body.shippingAddressId,
         notes: req.body.notes,
+        paymentMethod: req.body.paymentMethod || 'COD',
       });
       res.status(201).json(order);
     } catch (err) {

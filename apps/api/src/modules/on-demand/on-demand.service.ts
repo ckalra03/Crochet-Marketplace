@@ -19,6 +19,7 @@ export class OnDemandService {
     budgetMinCents?: number;
     budgetMaxCents?: number;
     expectedBy?: string;
+    referenceImages?: string[];
   }) {
     const request = await prisma.onDemandRequest.create({
       data: {
@@ -29,6 +30,7 @@ export class OnDemandService {
         budgetMinCents: data.budgetMinCents,
         budgetMaxCents: data.budgetMaxCents,
         expectedBy: data.expectedBy ? new Date(data.expectedBy) : undefined,
+        referenceImages: data.referenceImages ?? undefined,
       },
     });
 

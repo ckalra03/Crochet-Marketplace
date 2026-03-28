@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { authService } from '../modules/auth/auth.service';
+import { authService, AppError } from '../modules/auth/auth.service';
+import { generateOTP, storeOTP, sendOTP, verifyOTP } from '../modules/auth/otp.service';
 import { validate } from '../middleware/validate';
 import { authenticate } from '../middleware/auth';
 import {
@@ -10,6 +11,7 @@ import {
   resetPasswordSchema,
 } from '@crochet-hub/shared';
 import rateLimit from 'express-rate-limit';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -94,6 +96,73 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.resetPassword(req.body.token, req.body.password);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── OTP-based guest authentication ───────────────────────────────
+
+// Lenient rate limit for OTP: 20 requests per minute per IP
+const otpLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === 'development' ? 1000 : 20,
+  message: { error: 'Too many OTP attempts, please try again later' },
+});
+
+// Zod schemas for OTP endpoints
+const sendOtpSchema = z.object({ emailOrPhone: z.string().min(1) });
+const verifyOtpSchema = z.object({
+  emailOrPhone: z.string().min(1),
+  otp: z.string().length(6),
+  sessionId: z.string().optional(),
+});
+
+/**
+ * POST /auth/send-otp
+ * Generate and "send" (log) an OTP for guest checkout / on-demand.
+ */
+router.post(
+  '/send-otp',
+  otpLimiter,
+  validate(sendOtpSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { emailOrPhone } = req.body;
+      const otp = generateOTP();
+      storeOTP(emailOrPhone, otp);
+      sendOTP(emailOrPhone, otp);
+      res.json({ message: 'OTP sent' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * POST /auth/verify-otp
+ * Verify the OTP. If email is new, auto-create a user account.
+ * If email exists, log the user in. Merges guest cart if sessionId provided.
+ * Returns the same shape as /auth/login: { user, accessToken, refreshToken }
+ */
+router.post(
+  '/verify-otp',
+  otpLimiter,
+  validate(verifyOtpSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { emailOrPhone, otp, sessionId } = req.body;
+
+      // Check OTP validity
+      const valid = verifyOTP(emailOrPhone, otp);
+      if (!valid) {
+        throw new AppError('Invalid or expired OTP', 400);
+      }
+
+      // OTP is valid — auto-register or log in the user
+      const result = await authService.loginOrRegisterByOTP(emailOrPhone, sessionId);
       res.json(result);
     } catch (err) {
       next(err);

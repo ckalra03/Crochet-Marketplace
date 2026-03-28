@@ -3,19 +3,21 @@
 /**
  * RequestFormWizard -- Multi-step form for submitting a custom crochet request.
  *
- * Step 1 "Details":          Description + Category
- * Step 2 "Budget & Timeline": Budget range (INR) + Expected-by date
- * Step 3 "Review":            Summary of inputs + Submit
+ * Step 1 "Details":            Description + Category
+ * Step 2 "Budget & Timeline":  Budget range (INR) + Expected-by date
+ * Step 3 "Reference Images":   Upload up to 5 reference images (optional)
+ * Step 4 "Review":             Summary of inputs + Submit
  *
  * Uses Zod for per-step validation, React Query for submission,
  * and redirects to /on-demand on success.
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useCategories } from '@/lib/hooks/use-catalog';
 import { useSubmitOnDemandRequest } from '@/lib/hooks/use-on-demand';
+import { uploadOnDemandImage } from '@/lib/api/on-demand';
 import { formatMoney, formatDate } from '@/lib/utils/format';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Loader2, Upload, X, ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 /* ─────────────────── Zod schemas (per step) ─────────────────── */
 
@@ -72,9 +76,13 @@ const INITIAL: FormData = {
   expectedBy: '',
 };
 
+// Max 5 reference images, 5MB each
+const MAX_IMAGES = 5;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
 /* ─────────────────── Steps ─────────────────── */
 
-const STEP_TITLES = ['Details', 'Budget & Timeline', 'Review'];
+const STEP_TITLES = ['Details', 'Budget & Timeline', 'Reference Images', 'Review'];
 
 /* ─────────────────── Component ─────────────────── */
 
@@ -82,10 +90,15 @@ export function RequestFormWizard() {
   const router = useRouter();
   const { data: categories } = useCategories();
   const submitMutation = useSubmitOnDemandRequest();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Reference images state
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   /** Update a single field */
   function update(field: keyof FormData, value: string) {
@@ -137,15 +150,67 @@ export function RequestFormWizard() {
       }
     }
 
+    // Step 2 (images) has no required validation — images are optional
+
     return true;
   }
 
   function goNext() {
-    if (validateStep()) setStep((s) => Math.min(s + 1, 2));
+    if (validateStep()) setStep((s) => Math.min(s + 1, STEP_TITLES.length - 1));
   }
 
   function goBack() {
     setStep((s) => Math.max(s - 1, 0));
+  }
+
+  /** Handle file selection and upload to server */
+  async function handleImageUpload(files: FileList | null) {
+    if (!files || files.length === 0) return;
+
+    const remaining = MAX_IMAGES - imageUrls.length;
+    if (remaining <= 0) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
+    // Take only as many files as remaining slots
+    const filesToUpload = Array.from(files).slice(0, remaining);
+
+    // Validate file sizes
+    for (const file of filesToUpload) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} exceeds the 5MB size limit`);
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not an image file`);
+        return;
+      }
+    }
+
+    setUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of filesToUpload) {
+        const result = await uploadOnDemandImage(file);
+        urls.push(result.url);
+      }
+      setImageUrls((prev) => [...prev, ...urls]);
+      toast.success(`${urls.length} image(s) uploaded`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+      // Reset the file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }
+
+  /** Remove a reference image by index */
+  function removeImage(index: number) {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
   }
 
   /** Submit the request to the API */
@@ -163,6 +228,7 @@ export function RequestFormWizard() {
         budgetMinCents,
         budgetMaxCents,
         expectedBy: form.expectedBy || undefined,
+        referenceImages: imageUrls.length > 0 ? imageUrls : undefined,
       },
       {
         onSuccess: () => {
@@ -305,8 +371,81 @@ export function RequestFormWizard() {
         </Card>
       )}
 
-      {/* Step 3: Review */}
+      {/* Step 3: Reference Images */}
       {step === 2 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Reference Images (Optional)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Upload up to {MAX_IMAGES} reference images to help the artisan understand your vision.
+              Max 5MB per image.
+            </p>
+
+            {/* Uploaded image thumbnails */}
+            {imageUrls.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="group relative aspect-square overflow-hidden rounded-lg border">
+                    <img
+                      src={url}
+                      alt={`Reference ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    {/* Remove button */}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute right-1 top-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-label={`Remove image ${index + 1}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload button */}
+            {imageUrls.length < MAX_IMAGES && (
+              <div
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-8 text-muted-foreground transition-colors hover:border-primary-400 hover:text-primary-600"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <span className="text-sm">Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-8 w-8" />
+                    <span className="text-sm font-medium">Click to upload images</span>
+                    <span className="text-xs">
+                      {imageUrls.length}/{MAX_IMAGES} uploaded
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleImageUpload(e.target.files)}
+              disabled={uploading}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 4: Review */}
+      {step === 3 && (
         <Card>
           <CardHeader>
             <CardTitle>Review Your Request</CardTitle>
@@ -337,6 +476,27 @@ export function RequestFormWizard() {
                   {form.expectedBy ? formatDate(form.expectedBy) : 'No deadline'}
                 </dd>
               </div>
+              <div>
+                <dt className="font-medium text-muted-foreground">Reference Images</dt>
+                <dd className="mt-1">
+                  {imageUrls.length > 0 ? (
+                    <div className="flex gap-2 flex-wrap">
+                      {imageUrls.map((url, i) => (
+                        <img
+                          key={i}
+                          src={url}
+                          alt={`Reference ${i + 1}`}
+                          className="h-16 w-16 rounded border object-cover"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="flex items-center gap-1 text-muted-foreground">
+                      <ImageIcon className="h-4 w-4" /> None uploaded
+                    </span>
+                  )}
+                </dd>
+              </div>
             </dl>
 
             {submitMutation.isError && (
@@ -353,7 +513,7 @@ export function RequestFormWizard() {
         <Button variant="outline" onClick={goBack} disabled={step === 0}>
           Back
         </Button>
-        {step < 2 ? (
+        {step < STEP_TITLES.length - 1 ? (
           <Button onClick={goNext}>Continue</Button>
         ) : (
           <Button onClick={handleSubmit} disabled={submitMutation.isPending}>

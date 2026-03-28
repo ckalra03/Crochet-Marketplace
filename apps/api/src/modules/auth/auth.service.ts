@@ -95,6 +95,62 @@ export class AuthService {
     });
   }
 
+  /**
+   * OTP-based login or auto-registration.
+   * If the email exists, log the user in. Otherwise create a new account
+   * with a random password (the user authenticated via OTP, not password).
+   * Merges the guest cart if a sessionId is provided.
+   */
+  async loginOrRegisterByOTP(emailOrPhone: string, sessionId?: string) {
+    const email = emailOrPhone.toLowerCase().trim();
+
+    // Check if the user already exists
+    const existing = await prisma.user.findUnique({
+      where: { email },
+      include: { sellerProfile: true },
+    });
+
+    if (existing) {
+      // Existing user — log them in
+      if (!existing.isActive) {
+        throw new AppError('Account is deactivated', 401);
+      }
+
+      log.info(`OTP login for existing user: ${email}`, { userId: existing.id });
+      const tokens = await this.generateTokens(existing.id, existing.role, existing.sellerProfile?.id);
+
+      if (sessionId) {
+        await cartService.mergeGuestCart(sessionId, existing.id);
+      }
+
+      return { user: this.sanitizeUser(existing), ...tokens };
+    }
+
+    // New user — auto-register with a random password
+    const randomPassword = crypto.randomBytes(16).toString('hex');
+    const passwordHash = await bcrypt.hash(randomPassword, 12);
+
+    // Derive a display name from the email (part before @)
+    const name = email.split('@')[0] || 'Guest User';
+
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash,
+      },
+    });
+
+    log.info(`OTP auto-registered new user: ${email}`, { userId: user.id });
+    const tokens = await this.generateTokens(user.id, user.role);
+
+    if (sessionId) {
+      await cartService.mergeGuestCart(sessionId, user.id);
+    }
+
+    return { user: this.sanitizeUser(user), ...tokens };
+  }
+
   async getProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

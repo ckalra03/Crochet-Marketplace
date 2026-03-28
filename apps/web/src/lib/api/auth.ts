@@ -47,6 +47,22 @@ export async function logout(refreshToken: string): Promise<{ message: string }>
   return res.data;
 }
 
+/** Send an OTP to the given email or phone for guest verification. */
+export async function sendOTP(emailOrPhone: string): Promise<{ message: string }> {
+  const res = await api.post('/auth/send-otp', { emailOrPhone });
+  return res.data;
+}
+
+/** Verify an OTP. Auto-registers or logs in the user. Returns auth tokens. */
+export async function verifyOTPCode(data: {
+  emailOrPhone: string;
+  otp: string;
+  sessionId?: string;
+}): Promise<AuthResponse> {
+  const res = await api.post('/auth/verify-otp', data);
+  return res.data;
+}
+
 /** Request a password reset email. */
 export async function forgotPassword(email: string): Promise<{ message: string }> {
   const res = await api.post('/auth/forgot-password', { email });

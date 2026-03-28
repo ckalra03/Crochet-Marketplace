@@ -1,5 +1,21 @@
 'use client';
 
+/**
+ * Checkout page with guest OTP verification support.
+ *
+ * If NOT authenticated:
+ *   Shows OTP verification form first. After the guest verifies their email,
+ *   they are auto-registered/logged in, the cart merges, and the page
+ *   re-renders with the standard checkout flow.
+ *
+ * If authenticated:
+ *   Step 1: Select or add a shipping address
+ *   Step 2: Review order summary and acknowledge return policy
+ *   Step 3: Simulated payment / place order
+ *
+ * On success, redirects to /orders/{orderNumber}/confirmation.
+ */
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, ArrowLeft } from 'lucide-react';
@@ -11,22 +27,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { AddressSelector } from '@/components/checkout/address-selector';
 import { OrderSummary } from '@/components/checkout/order-summary';
 import { PaymentSection } from '@/components/checkout/payment-section';
+import { OTPVerification } from '@/components/checkout/otp-verification';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useAddresses } from '@/lib/hooks/use-profile';
 import { useCreateOrder } from '@/lib/hooks/use-checkout';
+import { useAuthStore } from '@/lib/stores/auth-store';
 import { toast } from 'sonner';
 
-/**
- * Checkout page with a multi-step feel:
- *   Step 1: Select or add a shipping address
- *   Step 2: Review order summary and acknowledge return policy
- *   Step 3: Simulated payment / place order
- *
- * On success, redirects to /orders/{orderNumber}/confirmation.
- */
 export default function CheckoutPage() {
   const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const { data: cart, isLoading: cartLoading } = useCart();
+
+  // Only fetch addresses when authenticated (they require auth)
   const { data: addresses, isLoading: addrLoading } = useAddresses();
   const createOrderMutation = useCreateOrder();
 
@@ -52,7 +65,7 @@ export default function CheckoutPage() {
   }, [cart, cartLoading, router]);
 
   // ── Loading state ─────────────────────────────────────────────────
-  if (cartLoading || addrLoading) {
+  if (cartLoading) {
     return (
       <div className="container mx-auto px-4 py-20 text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary-600" />
@@ -63,6 +76,43 @@ export default function CheckoutPage() {
 
   const items = cart?.items || [];
   const totalInCents = cart?.totalInCents || 0;
+
+  // ── Guest flow: show OTP verification ─────────────────────────────
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Back to cart link */}
+        <Link
+          href="/cart"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to cart
+        </Link>
+
+        <h1 className="text-2xl font-bold mb-6">Checkout</h1>
+
+        <p className="text-muted-foreground mb-6 text-center">
+          Please verify your email to continue with checkout. If you already have an account,
+          you will be logged in automatically.
+        </p>
+
+        <OTPVerification
+          title="Verify to Checkout"
+          description="Enter your email and verify with OTP to place your order."
+        />
+      </div>
+    );
+  }
+
+  // ── Authenticated flow: loading addresses ─────────────────────────
+  if (addrLoading) {
+    return (
+      <div className="container mx-auto px-4 py-20 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary-600" />
+        <p className="text-muted-foreground mt-3">Loading checkout...</p>
+      </div>
+    );
+  }
 
   // ── Handle order placement ────────────────────────────────────────
   function handlePlaceOrder() {

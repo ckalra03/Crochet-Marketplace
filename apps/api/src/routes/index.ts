@@ -21,6 +21,8 @@ router.use('/catalog', catalogRoutes);
 router.use('/cart', optionalAuth, cartRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/orders', authenticate, orderRoutes);
+// On-demand uses authenticate — guests verify OTP first (which gives them tokens),
+// then submit as authenticated users. The upload-image endpoint also requires auth.
 router.use('/on-demand', authenticate, onDemandRoutes);
 router.use('/returns', authenticate, returnRoutes);
 router.use('/profile', authenticate, profileRoutes);

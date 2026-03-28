@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { SocketProvider } from '@/lib/socket/socket-provider';
 import { SocketQueryInvalidator } from '@/lib/socket/socket-query-invalidator';
+import { CartDrawer } from '@/components/cart/cart-drawer';
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
@@ -34,6 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SocketQueryInvalidator />
             {children}
           </SocketProvider>
+          <CartDrawer />
           <Toaster position="top-right" richColors />
         </AuthInitializer>
       </ThemeProvider>

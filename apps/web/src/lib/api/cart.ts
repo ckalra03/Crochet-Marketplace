@@ -32,3 +32,9 @@ export async function removeCartItem(id: string) {
   const res = await api.delete(`/cart/items/${id}`);
   return res.data;
 }
+
+/** Apply a coupon code to the cart and get the discount. */
+export async function applyCoupon(code: string) {
+  const res = await api.post('/cart/apply-coupon', { code });
+  return res.data;
+}

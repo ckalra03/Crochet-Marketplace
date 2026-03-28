@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, LogIn, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatMoney } from '@/lib/utils/format';
 import { useAuthStore } from '@/lib/stores/auth-store';
+import { CouponInput } from './coupon-input';
+
+interface CouponResult {
+  couponId: string;
+  code: string;
+  type: string;
+  discountCents: number;
+}
 
 interface CartSummaryProps {
   /** Total price in cents */
@@ -22,6 +31,11 @@ interface CartSummaryProps {
  */
 export function CartSummary({ totalInCents, itemCount }: CartSummaryProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponResult | null>(null);
+
+  // Calculate final total after coupon discount
+  const discountCents = appliedCoupon?.discountCents ?? 0;
+  const finalTotal = Math.max(0, totalInCents - discountCents);
 
   return (
     <Card className="h-fit sticky top-20">
@@ -46,12 +60,27 @@ export function CartSummary({ totalInCents, itemCount }: CartSummaryProps) {
             <span className="text-green-600 font-medium">Free</span>
           </div>
 
+          {/* Coupon input */}
+          <Separator />
+          <CouponInput
+            onCouponChange={setAppliedCoupon}
+            appliedCoupon={appliedCoupon}
+          />
+
+          {/* Discount line -- only show when a coupon is applied */}
+          {appliedCoupon && (
+            <div className="flex justify-between text-green-600">
+              <span>Discount</span>
+              <span>-{formatMoney(discountCents)}</span>
+            </div>
+          )}
+
           <Separator />
 
           {/* Total */}
           <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span className="text-primary-600">{formatMoney(totalInCents)}</span>
+            <span className="text-primary-600">{formatMoney(finalTotal)}</span>
           </div>
         </div>
 

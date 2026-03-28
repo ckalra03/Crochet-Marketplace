@@ -910,3 +910,23 @@ model Notification {
   @@index([createdAt], name: "idx_notifications_created")
   @@map("notifications")
 }
+
+// ─── COUPONS ────────────────────────────────────────
+
+model Coupon {
+  id               String    @id @default(uuid()) @db.Uuid
+  code             String    @unique @db.VarChar(50)
+  type             String    @db.VarChar(20) // 'PERCENTAGE' or 'FIXED'
+  value            Int       // percentage (e.g. 10 = 10%) or fixed amount in cents
+  minOrderCents    Int?      @map("min_order_cents")
+  maxDiscountCents Int?      @map("max_discount_cents") // cap for percentage discounts
+  maxUses          Int?      @map("max_uses")
+  usedCount        Int       @default(0) @map("used_count")
+  isActive         Boolean   @default(true) @map("is_active")
+  expiresAt        DateTime? @map("expires_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([code], name: "idx_coupons_code")
+  @@map("coupons")
+}

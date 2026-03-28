@@ -406,3 +406,55 @@ export async function getSellerPerformance(params?: PerformanceListParams) {
   const res = await api.get('/admin/performance/sellers', { params });
   return res.data;
 }
+
+// ─── Coupons ─────────────────────────────────────────
+
+export interface CouponListParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateCouponData {
+  code: string;
+  type: 'PERCENTAGE' | 'FIXED';
+  value: number;
+  minOrderCents?: number;
+  maxDiscountCents?: number;
+  maxUses?: number;
+  expiresAt?: string;
+}
+
+export interface UpdateCouponData {
+  code?: string;
+  type?: 'PERCENTAGE' | 'FIXED';
+  value?: number;
+  minOrderCents?: number | null;
+  maxDiscountCents?: number | null;
+  maxUses?: number | null;
+  isActive?: boolean;
+  expiresAt?: string | null;
+}
+
+/** List all coupons with pagination. */
+export async function getCoupons(params?: CouponListParams) {
+  const res = await api.get('/admin/coupons', { params });
+  return res.data;
+}
+
+/** Create a new coupon. */
+export async function createCoupon(data: CreateCouponData) {
+  const res = await api.post('/admin/coupons', data);
+  return res.data;
+}
+
+/** Update an existing coupon. */
+export async function updateCoupon(id: string, data: UpdateCouponData) {
+  const res = await api.put(`/admin/coupons/${id}`, data);
+  return res.data;
+}
+
+/** Deactivate a coupon. */
+export async function deleteCoupon(id: string) {
+  const res = await api.delete(`/admin/coupons/${id}`);
+  return res.data;
+}

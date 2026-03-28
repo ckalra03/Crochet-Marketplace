@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * New Product page -- create mode.
- * Renders the ProductForm component with empty initial state.
+ * New Product page -- create mode with multi-step wizard.
+ * Renders the ProductWizard component for guided product creation.
  * Includes breadcrumb navigation: Dashboard > Products > New.
- * Uses the useCategories() hook instead of raw fetch for consistency.
+ * Uses the useCategories() hook for the category dropdown.
  */
 
 import Link from 'next/link';
@@ -17,7 +17,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { ProductForm } from '@/components/seller/product-form';
+import { ProductWizard } from '@/components/seller/product-wizard';
 import { useCategories } from '@/lib/hooks/use-catalog';
 
 export default function NewProductPage() {
@@ -53,7 +53,7 @@ export default function NewProductPage() {
       {categoriesLoading ? (
         <div className="py-20 text-center">Loading...</div>
       ) : (
-        <ProductForm categories={categories} />
+        <ProductWizard categories={categories} />
       )}
     </div>
   );

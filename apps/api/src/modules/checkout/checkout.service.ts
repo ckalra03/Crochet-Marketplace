@@ -3,6 +3,7 @@ import { AppError } from '../auth/auth.service';
 import { writeAuditLog } from '../../support/audit-logger';
 import { createModuleLogger } from '../../support/logger';
 import { cartService } from '../cart/cart.service';
+import { couponService } from '../coupons/coupon.service';
 
 const log = createModuleLogger('checkout');
 
@@ -13,7 +14,7 @@ function generateOrderNumber(): string {
 }
 
 export class CheckoutService {
-  async createOrder(userId: string, data: { shippingAddressId: string; notes?: string; paymentMethod?: 'COD' }) {
+  async createOrder(userId: string, data: { shippingAddressId: string; notes?: string; paymentMethod?: 'COD'; couponCode?: string }) {
     const cart = await cartService.getCart(userId);
     if (cart.items.length === 0) throw new AppError('Cart is empty', 400);
 
@@ -61,7 +62,17 @@ export class CheckoutService {
 
       const shippingFeeInCents = 0; // Free shipping for MVP
       const taxAmountInCents = 0;
-      const totalInCents = subtotalInCents + shippingFeeInCents + taxAmountInCents;
+
+      // Apply coupon discount if a coupon code was provided
+      let discountInCents = 0;
+      let appliedCouponId: string | null = null;
+      if (data.couponCode) {
+        const couponResult = await couponService.applyCoupon(data.couponCode, subtotalInCents);
+        discountInCents = couponResult.discountCents;
+        appliedCouponId = couponResult.couponId;
+      }
+
+      const totalInCents = subtotalInCents + shippingFeeInCents + taxAmountInCents - discountInCents;
 
       const newOrder = await tx.order.create({
         data: {
@@ -71,6 +82,7 @@ export class CheckoutService {
           subtotalInCents,
           shippingFeeInCents,
           taxAmountInCents,
+          discountInCents,
           totalInCents,
           notes: data.notes,
           items: { create: orderItems },
@@ -81,12 +93,25 @@ export class CheckoutService {
       // Clear cart
       await tx.cartItem.deleteMany({ where: { userId } });
 
-      return newOrder;
+      return { order: newOrder, appliedCouponId };
     });
+
+    // Destructure the transaction result
+    const createdOrder = order.order;
+    const couponId = order.appliedCouponId;
+
+    // Increment coupon usage outside the transaction (non-critical)
+    if (couponId) {
+      try {
+        await couponService.incrementUsage(couponId);
+      } catch {
+        log.warn(`Failed to increment coupon usage for ${couponId}`);
+      }
+    }
 
     const paymentMethod = data.paymentMethod || 'COD';
 
-    log.info(`Order created: ${order.orderNumber}`, { userId, orderId: order.id, total: order.totalInCents, paymentMethod });
+    log.info(`Order created: ${createdOrder.orderNumber}`, { userId, orderId: createdOrder.id, total: createdOrder.totalInCents, paymentMethod });
 
     // COD flow: confirm order immediately, payment stays PENDING until delivery
     if (paymentMethod === 'COD') {
@@ -94,10 +119,10 @@ export class CheckoutService {
         // Create a COD payment record with INITIATED status (collected on delivery)
         await tx.payment.create({
           data: {
-            orderId: order.id,
+            orderId: createdOrder.id,
             gateway: 'MOCK', // Using MOCK since COD is not in PaymentGateway enum
             gatewayTransactionId: `cod-${Date.now()}`,
-            amountInCents: order.totalInCents,
+            amountInCents: createdOrder.totalInCents,
             status: 'INITIATED',
             method: 'COD',
           },
@@ -105,7 +130,7 @@ export class CheckoutService {
 
         // Set order to CONFIRMED (skip PENDING_PAYMENT), paymentStatus stays PENDING
         await tx.order.update({
-          where: { id: order.id },
+          where: { id: createdOrder.id },
           data: {
             status: 'CONFIRMED',
             paymentStatus: 'PENDING',
@@ -115,7 +140,7 @@ export class CheckoutService {
 
         // Confirm all order items
         await tx.orderItem.updateMany({
-          where: { orderId: order.id },
+          where: { orderId: createdOrder.id },
           data: { status: 'CONFIRMED' },
         });
       });
@@ -124,12 +149,12 @@ export class CheckoutService {
         userId,
         action: 'order.created',
         auditableType: 'Order',
-        auditableId: order.id,
-        newValues: { orderNumber: order.orderNumber, status: 'CONFIRMED', paymentMethod: 'COD', totalInCents: order.totalInCents },
+        auditableId: createdOrder.id,
+        newValues: { orderNumber: createdOrder.orderNumber, status: 'CONFIRMED', paymentMethod: 'COD', totalInCents: createdOrder.totalInCents },
       });
 
       return prisma.order.findUnique({
-        where: { id: order.id },
+        where: { id: createdOrder.id },
         include: { items: true, payments: true, shippingAddress: true },
       });
     }
@@ -139,14 +164,14 @@ export class CheckoutService {
       userId,
       action: 'order.created',
       auditableType: 'Order',
-      auditableId: order.id,
-      newValues: { orderNumber: order.orderNumber, status: 'PENDING_PAYMENT', totalInCents: order.totalInCents },
+      auditableId: createdOrder.id,
+      newValues: { orderNumber: createdOrder.orderNumber, status: 'PENDING_PAYMENT', totalInCents: createdOrder.totalInCents },
     });
 
-    const confirmedOrder = await this.confirmPayment(order.id, {
+    const confirmedOrder = await this.confirmPayment(createdOrder.id, {
       gateway: 'MOCK',
       gatewayTransactionId: `mock-${Date.now()}`,
-      amountInCents: order.totalInCents,
+      amountInCents: createdOrder.totalInCents,
       method: 'mock',
     });
 

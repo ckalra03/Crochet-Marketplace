@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { cartService, CartIdentifier } from '../modules/cart/cart.service';
+import { couponService } from '../modules/coupons/coupon.service';
 import { validate } from '../middleware/validate';
 import { z } from 'zod';
 
@@ -68,5 +69,23 @@ router.delete('/items/:id', async (req: Request, res: Response, next: NextFuncti
     next(err);
   }
 });
+
+// Apply a coupon code to the current cart
+router.post(
+  '/apply-coupon',
+  validate(z.object({ code: z.string().min(1).max(50) })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cart = await cartService.getCart(getCartId(req));
+      if (cart.items.length === 0) {
+        return res.status(400).json({ error: 'Cart is empty' });
+      }
+      const result = await couponService.applyCoupon(req.body.code, cart.totalInCents);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

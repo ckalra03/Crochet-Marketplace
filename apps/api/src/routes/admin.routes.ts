@@ -13,6 +13,7 @@ import { settingsService } from '../modules/settings/settings.service';
 import { slaService } from '../modules/sla/sla.service';
 import { penaltyService } from '../modules/penalties/penalty.service';
 import { performanceService } from '../modules/performance/performance.service';
+import { couponService } from '../modules/coupons/coupon.service';
 import { getPayoutQueue } from '../jobs';
 import { reviewReturnSchema } from '@crochet-hub/shared';
 import { validate } from '../middleware/validate';
@@ -571,6 +572,76 @@ router.get('/performance/sellers', async (req: Request, res: Response, next: Nex
       order: (req.query.order as 'asc' | 'desc') || 'desc',
     });
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Coupons ──────────────────────────────────────
+
+// Create a new coupon
+router.post(
+  '/coupons',
+  validate(z.object({
+    code: z.string().min(2).max(50),
+    type: z.enum(['PERCENTAGE', 'FIXED']),
+    value: z.number().int().positive(),
+    minOrderCents: z.number().int().positive().optional(),
+    maxDiscountCents: z.number().int().positive().optional(),
+    maxUses: z.number().int().positive().optional(),
+    expiresAt: z.string().optional(),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const coupon = await couponService.createCoupon(req.body);
+      res.status(201).json(coupon);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// List all coupons
+router.get('/coupons', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await couponService.getCoupons({
+      page: Number(req.query.page) || 1,
+      limit: Number(req.query.limit) || 20,
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Update a coupon
+router.put(
+  '/coupons/:id',
+  validate(z.object({
+    code: z.string().min(2).max(50).optional(),
+    type: z.enum(['PERCENTAGE', 'FIXED']).optional(),
+    value: z.number().int().positive().optional(),
+    minOrderCents: z.number().int().positive().nullable().optional(),
+    maxDiscountCents: z.number().int().positive().nullable().optional(),
+    maxUses: z.number().int().positive().nullable().optional(),
+    isActive: z.boolean().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const coupon = await couponService.updateCoupon(req.params.id, req.body);
+      res.json(coupon);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// Deactivate (soft delete) a coupon
+router.delete('/coupons/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const coupon = await couponService.deactivateCoupon(req.params.id);
+    res.json(coupon);
   } catch (err) {
     next(err);
   }

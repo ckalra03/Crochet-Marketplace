@@ -46,6 +46,10 @@ import {
   createPenalty,
   waivePenalty,
   getSellerPerformance,
+  getCoupons,
+  createCoupon,
+  updateCoupon,
+  deleteCoupon,
 } from '@/lib/api/admin';
 import type {
   AuditLogParams,
@@ -63,6 +67,9 @@ import type {
   AdminPenaltyListParams,
   CreatePenaltyData,
   PerformanceListParams,
+  CouponListParams,
+  CreateCouponData,
+  UpdateCouponData,
 } from '@/lib/api/admin';
 import { queryKeys } from '@/lib/api/query-keys';
 
@@ -579,5 +586,52 @@ export function useAdminSellerPerformance(params?: PerformanceListParams) {
   return useQuery({
     queryKey: queryKeys.admin.sellerPerformance(params),
     queryFn: () => getSellerPerformance(params),
+  });
+}
+
+// ─── Coupons ─────────────────────────────────────────
+
+/** Fetch all coupons with pagination. */
+export function useAdminCoupons(params?: CouponListParams) {
+  return useQuery({
+    queryKey: queryKeys.admin.coupons(params),
+    queryFn: () => getCoupons(params),
+  });
+}
+
+/** Mutation to create a new coupon. */
+export function useCreateCoupon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCouponData) => createCoupon(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
+    },
+  });
+}
+
+/** Mutation to update an existing coupon. */
+export function useUpdateCoupon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCouponData }) =>
+      updateCoupon(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
+    },
+  });
+}
+
+/** Mutation to deactivate (soft delete) a coupon. */
+export function useDeleteCoupon() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteCoupon(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.coupons() });
+    },
   });
 }

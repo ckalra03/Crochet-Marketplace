@@ -18,14 +18,21 @@ export function useCart() {
   });
 }
 
-/** Add a product to the cart. Invalidates cart cache on success. */
+/** Add a product to the cart. Invalidates cart cache and syncs store on success. */
 export function useAddToCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (data: AddToCartData) => addToCart(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
+    onSuccess: async () => {
+      // Invalidate and refetch cart to sync Zustand store (updates nav badge)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.cart.all });
+      try {
+        const cart = await getCart();
+        useCartStore.getState().setCart(cart.items, cart.totalInCents);
+      } catch {
+        // Ignore — store will sync on next cart page visit
+      }
     },
   });
 }

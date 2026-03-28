@@ -138,6 +138,17 @@ router.get('/products', async (req: Request, res: Response, next: NextFunction) 
   }
 });
 
+// GET a single product by ID (seller-scoped, includes media + category)
+router.get('/products/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const profile = await sellerService.getProfile(req.user!.userId);
+    const product = await productService.getSellerProduct(req.params.id, profile.id);
+    res.json(product);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post(
   '/products',
   validate(createProductSchema),

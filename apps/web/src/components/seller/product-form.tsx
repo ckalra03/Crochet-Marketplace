@@ -20,17 +20,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateProduct, useUpdateProduct, useSubmitForApproval, useUploadMedia, useDeleteMedia } from '@/lib/hooks/use-seller';
-import { ImagePlus, X, Loader2 } from 'lucide-react';
+import { ImagePlus, X, Loader2, Eye } from 'lucide-react';
+import Link from 'next/link';
 
 /* ─────────────────── Zod Schema ─────────────────── */
 
+/**
+ * Zod schema for the form. Note: priceInRupees and compareAtPriceInRupees
+ * are the user-facing fields (in INR). They get converted to paise (*100)
+ * before sending to the API in handleSave / handleSubmitForApproval.
+ */
 const productSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   categoryId: z.string().min(1, 'Please select a category'),
   productType: z.enum(['READY_STOCK', 'MADE_TO_ORDER', 'ON_DEMAND']),
-  priceInCents: z.number().min(100, 'Minimum price is 100 paise (Rs 1)').optional(),
-  compareAtPriceInCents: z.number().min(100).optional(),
+  priceInRupees: z.number().min(1, 'Minimum price is 1 rupee').optional(),
+  compareAtPriceInRupees: z.number().min(1).optional(),
   stockQuantity: z.number().min(0).optional(),
   leadTimeDays: z.number().min(1).optional(),
   returnPolicy: z.enum(['DEFECT_ONLY', 'NO_RETURN', 'STANDARD']),
@@ -51,8 +57,14 @@ interface MediaItem {
 }
 
 interface ProductFormProps {
-  /** Pre-populate fields for edit mode */
-  initialData?: ProductFormValues & { id: string; media?: MediaItem[] };
+  /** Pre-populate fields for edit mode. priceInCents / compareAtPriceInCents
+   *  come from the API in paise and are converted to rupees for display. */
+  initialData?: Omit<ProductFormValues, 'priceInRupees' | 'compareAtPriceInRupees'> & {
+    id: string;
+    media?: MediaItem[];
+    priceInCents?: number;
+    compareAtPriceInCents?: number;
+  };
   /** Categories list for the category dropdown */
   categories: Array<{ id: string; name: string }>;
 }
@@ -70,14 +82,14 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
   // Track uploaded media (from initialData in edit mode)
   const [media, setMedia] = useState<MediaItem[]>(initialData?.media ?? []);
 
-  // Form state
+  // Form state -- prices stored in rupees for user-friendly display
   const [form, setForm] = useState<ProductFormValues>({
     name: '',
     description: '',
     categoryId: '',
     productType: 'READY_STOCK',
-    priceInCents: undefined,
-    compareAtPriceInCents: undefined,
+    priceInRupees: undefined,
+    compareAtPriceInRupees: undefined,
     stockQuantity: 0,
     leadTimeDays: undefined,
     returnPolicy: 'DEFECT_ONLY',
@@ -90,7 +102,8 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState('basic');
 
-  // Pre-populate when initialData is provided (edit mode)
+  // Pre-populate when initialData is provided (edit mode).
+  // Convert paise -> rupees for the price fields on load.
   useEffect(() => {
     if (initialData) {
       setForm({
@@ -98,8 +111,11 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
         description: initialData.description,
         categoryId: initialData.categoryId,
         productType: initialData.productType,
-        priceInCents: initialData.priceInCents,
-        compareAtPriceInCents: initialData.compareAtPriceInCents,
+        // Convert from paise (API) to rupees (display)
+        priceInRupees: initialData.priceInCents ? initialData.priceInCents / 100 : undefined,
+        compareAtPriceInRupees: initialData.compareAtPriceInCents
+          ? initialData.compareAtPriceInCents / 100
+          : undefined,
         stockQuantity: initialData.stockQuantity,
         leadTimeDays: initialData.leadTimeDays,
         returnPolicy: initialData.returnPolicy,
@@ -123,7 +139,7 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
 
       // Jump to the tab containing the first error
       const basicFields = ['name', 'description', 'categoryId', 'productType'];
-      const pricingFields = ['priceInCents', 'compareAtPriceInCents', 'stockQuantity', 'leadTimeDays'];
+      const pricingFields = ['priceInRupees', 'compareAtPriceInRupees', 'stockQuantity', 'leadTimeDays'];
       const firstErrorField = Object.keys(fieldErrors)[0];
       if (basicFields.includes(firstErrorField)) setActiveTab('basic');
       else if (pricingFields.includes(firstErrorField)) setActiveTab('pricing');
@@ -135,17 +151,44 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
     return result.data;
   }
 
+  /**
+   * Convert the form values (rupees) to the API payload (paise).
+   * Also ensures stockQuantity defaults to 0 for READY_STOCK products.
+   */
+  function toApiPayload(data: ProductFormValues) {
+    return {
+      name: data.name,
+      description: data.description,
+      categoryId: data.categoryId,
+      productType: data.productType,
+      // Convert rupees -> paise for the API
+      priceInCents: data.priceInRupees ? Math.round(data.priceInRupees * 100) : undefined,
+      compareAtPriceInCents: data.compareAtPriceInRupees
+        ? Math.round(data.compareAtPriceInRupees * 100)
+        : undefined,
+      // Default stockQuantity to 0 for READY_STOCK if not set
+      stockQuantity: data.productType === 'READY_STOCK' ? (data.stockQuantity ?? 0) : data.stockQuantity,
+      leadTimeDays: data.leadTimeDays,
+      returnPolicy: data.returnPolicy,
+      materials: data.materials,
+      dimensions: data.dimensions,
+      careInstructions: data.careInstructions,
+    };
+  }
+
   /** Save as draft (create or update) */
   async function handleSave() {
     const data = validate();
     if (!data) return;
 
+    const payload = toApiPayload(data);
+
     try {
       if (initialData?.id) {
-        await updateProduct.mutateAsync({ id: initialData.id, data });
+        await updateProduct.mutateAsync({ id: initialData.id, data: payload });
         toast.success('Product updated');
       } else {
-        await createProduct.mutateAsync(data);
+        await createProduct.mutateAsync(payload);
         toast.success('Product created as draft');
       }
       router.push('/seller/products');
@@ -159,15 +202,17 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
     const data = validate();
     if (!data) return;
 
+    const payload = toApiPayload(data);
+
     try {
       let productId = initialData?.id;
 
       if (productId) {
         // Update existing product first
-        await updateProduct.mutateAsync({ id: productId, data });
+        await updateProduct.mutateAsync({ id: productId, data: payload });
       } else {
         // Create new product first
-        const result = await createProduct.mutateAsync(data);
+        const result = await createProduct.mutateAsync(payload);
         productId = result.id;
       }
 
@@ -402,31 +447,33 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
               <CardTitle className="text-lg">Pricing & Stock</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Price */}
+              {/* Price -- user enters in rupees, converted to paise on save */}
               <div>
-                <Label htmlFor="priceInCents">Price (in paise, e.g. 89900 = Rs 899)</Label>
+                <Label htmlFor="priceInRupees">Price (&#8377;)</Label>
                 <Input
-                  id="priceInCents"
+                  id="priceInRupees"
                   type="number"
-                  value={form.priceInCents ?? ''}
-                  onChange={(e) => setField('priceInCents', e.target.value ? Number(e.target.value) : undefined)}
-                  min={100}
-                  placeholder="89900"
+                  value={form.priceInRupees ?? ''}
+                  onChange={(e) => setField('priceInRupees', e.target.value ? Number(e.target.value) : undefined)}
+                  min={1}
+                  step="0.01"
+                  placeholder="899"
                   className="mt-1"
                 />
-                {errors.priceInCents && <p className="text-sm text-red-600 mt-1">{errors.priceInCents}</p>}
+                {errors.priceInRupees && <p className="text-sm text-red-600 mt-1">{errors.priceInRupees}</p>}
               </div>
 
-              {/* Compare-at price */}
+              {/* Compare-at price -- user enters in rupees */}
               <div>
-                <Label htmlFor="compareAtPriceInCents">Compare-at Price (optional, for showing discounts)</Label>
+                <Label htmlFor="compareAtPriceInRupees">Compare-at Price (&#8377;, optional, for showing discounts)</Label>
                 <Input
-                  id="compareAtPriceInCents"
+                  id="compareAtPriceInRupees"
                   type="number"
-                  value={form.compareAtPriceInCents ?? ''}
-                  onChange={(e) => setField('compareAtPriceInCents', e.target.value ? Number(e.target.value) : undefined)}
-                  min={100}
-                  placeholder="99900"
+                  value={form.compareAtPriceInRupees ?? ''}
+                  onChange={(e) => setField('compareAtPriceInRupees', e.target.value ? Number(e.target.value) : undefined)}
+                  min={1}
+                  step="0.01"
+                  placeholder="999"
                   className="mt-1"
                 />
               </div>
@@ -562,6 +609,15 @@ function ProductForm({ initialData, categories }: ProductFormProps) {
         >
           {isSubmitting ? 'Submitting...' : 'Submit for Approval'}
         </Button>
+
+        {/* Preview button -- only visible in edit mode when the product has an ID */}
+        {initialData?.id && (
+          <Link href={`/seller/products/${initialData.id}/preview`}>
+            <Button type="button" variant="secondary" className="gap-2">
+              <Eye className="h-4 w-4" /> Preview
+            </Button>
+          </Link>
+        )}
       </div>
     </div>
   );

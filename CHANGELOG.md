@@ -2,6 +2,23 @@
 
 All notable changes to the Crochet Hub project, organized by feature branch.
 
+## Branch 59: `fix/product-form` -- Fix Product Form & Add Product Preview
+
+**Date:** 2026-03-27 | **Commits:** 1
+
+- Replaced raw `fetch()` with `useCategories()` hook in both new and edit product pages for consistency and React Query caching
+- Fixed media not being passed to ProductForm on edit, so the Images tab now works correctly
+- Added missing `GET /seller/products/:id` API route and `getSellerProduct()` service method
+- Changed price input from confusing paise entry to user-friendly rupees (INR) with automatic paise conversion on save
+- Added `stockQuantity` default of 0 for READY_STOCK products in the form save handler
+- Fixed categories loading race condition on edit page -- form now waits for both product and categories
+- Created product preview page at `/seller/products/[id]/preview` showing buyer-facing view with images, price, description, and metadata
+- Added Preview buttons to both the product list page (actions column) and the product form (edit mode)
+
+**Key files:** `apps/web/src/components/seller/product-form.tsx`, `apps/web/src/app/seller/products/[id]/preview/page.tsx`, `apps/api/src/routes/seller.routes.ts`
+
+---
+
 ## Branch 48: `feature/sla-monitoring` -- SLA Monitoring, Auto-Penalties & Seller Performance
 
 **Date:** 2026-03-27 | **Commits:** 1

@@ -81,6 +81,19 @@ export class ProductService {
     });
   }
 
+  /** Fetch a single product by ID, scoped to the given seller. Includes category and all media. */
+  async getSellerProduct(productId: string, sellerProfileId: string) {
+    const product = await prisma.product.findFirst({
+      where: { id: productId, sellerProfileId, deletedAt: null },
+      include: {
+        category: true,
+        media: { orderBy: { sortOrder: 'asc' } },
+      },
+    });
+    if (!product) throw new AppError('Product not found', 404);
+    return product;
+  }
+
   async listSellerProducts(sellerProfileId: string, page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where = { sellerProfileId, deletedAt: null };

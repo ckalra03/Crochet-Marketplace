@@ -4,9 +4,9 @@
  * New Product page -- create mode.
  * Renders the ProductForm component with empty initial state.
  * Includes breadcrumb navigation: Dashboard > Products > New.
+ * Uses the useCategories() hook instead of raw fetch for consistency.
  */
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 import {
@@ -18,19 +18,11 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { ProductForm } from '@/components/seller/product-form';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { useCategories } from '@/lib/hooks/use-catalog';
 
 export default function NewProductPage() {
-  // Fetch categories for the dropdown
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/catalog/categories`)
-      .then((r) => r.json())
-      .then(setCategories)
-      .catch(() => {});
-  }, []);
+  // Use the shared hook for fetching categories (cached via React Query)
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
 
   return (
     <div>
@@ -57,7 +49,12 @@ export default function NewProductPage() {
 
       <h1 className="text-2xl font-bold mb-6">Add New Product</h1>
 
-      <ProductForm categories={categories} />
+      {/* Show loading state while categories are being fetched */}
+      {categoriesLoading ? (
+        <div className="py-20 text-center">Loading...</div>
+      ) : (
+        <ProductForm categories={categories} />
+      )}
     </div>
   );
 }

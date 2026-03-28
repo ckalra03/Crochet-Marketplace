@@ -30,7 +30,8 @@ function ActivityFeed() {
 
   if (isLoading) return <ActivityFeedSkeleton />;
 
-  const logs = data?.data ?? data ?? [];
+  // API returns { logs: [...], pagination: {...} } — extract the array
+  const logs = Array.isArray(data) ? data : (data?.logs ?? data?.data ?? []);
 
   return (
     <Card>

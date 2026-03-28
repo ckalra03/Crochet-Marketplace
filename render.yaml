@@ -59,6 +59,15 @@ services:
       - key: REDIS_URL
         sync: false  # Set to your Upstash Redis URL (optional)
 
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # Set to your Cloudinary cloud name (optional)
+
+      - key: CLOUDINARY_API_KEY
+        sync: false  # Set to your Cloudinary API key (optional)
+
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # Set to your Cloudinary API secret (optional)
+
       - key: PAYMENT_GATEWAY
         value: "mock"  # Change to razorpay/stripe for production
 

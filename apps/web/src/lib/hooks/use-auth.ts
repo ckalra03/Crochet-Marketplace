@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { login, register, logout, forgotPassword, resetPassword } from '@/lib/api/auth';
+import { login, register, logout, forgotPassword, resetPassword, sendOTP, verifyOTPCode } from '@/lib/api/auth';
 import type { LoginData, RegisterData } from '@/lib/api/auth';
 import { queryKeys } from '@/lib/api/query-keys';
 import { useAuthStore } from '@/lib/stores/auth-store';
@@ -41,6 +41,27 @@ export function useLogout() {
     onSuccess: () => {
       useAuthStore.getState().logout();
       queryClient.clear();
+    },
+  });
+}
+
+/** Mutation to send an OTP for guest checkout / on-demand. */
+export function useSendOTP() {
+  return useMutation({
+    mutationFn: (emailOrPhone: string) => sendOTP(emailOrPhone),
+  });
+}
+
+/** Mutation to verify OTP. Auto-registers or logs in. Updates auth store on success. */
+export function useVerifyOTP() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { emailOrPhone: string; otp: string; sessionId?: string }) =>
+      verifyOTPCode(data),
+    onSuccess: (data) => {
+      useAuthStore.getState().setAuth(data.user, data.accessToken, data.refreshToken);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.all });
     },
   });
 }

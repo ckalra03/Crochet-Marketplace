@@ -6,6 +6,7 @@ export interface SubmitOnDemandData {
   budgetMinCents?: number;
   budgetMaxCents?: number;
   expectedBy?: string;
+  referenceImages?: string[];
 }
 
 /** Fetch all on-demand requests for the current buyer. */
@@ -23,6 +24,19 @@ export async function getOnDemandRequest(id: string) {
 /** Submit a new on-demand crochet request. */
 export async function submitOnDemandRequest(data: SubmitOnDemandData) {
   const res = await api.post('/on-demand', data);
+  return res.data;
+}
+
+/**
+ * Upload a reference image for a custom order.
+ * Returns the Cloudinary URL for the uploaded image.
+ */
+export async function uploadOnDemandImage(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post('/on-demand/upload-image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
   return res.data;
 }
 

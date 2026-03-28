@@ -12,10 +12,13 @@ import { validate } from '../middleware/validate';
 import { sellerRegisterSchema, updateSellerProfileSchema, createProductSchema, updateProductSchema } from '@crochet-hub/shared';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
+import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary';
 
+// Multer stores files temporarily — Cloudinary uploads from the temp path
 const upload = multer({
   dest: path.join(process.cwd(), 'uploads'),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
@@ -188,9 +191,24 @@ router.post('/products/:id/media', upload.single('file'), async (req: Request, r
     if (!req.file) return res.status(400).json({ error: 'File is required' });
     const profile = await sellerService.getProfile(req.user!.userId);
     const type = req.file.mimetype.startsWith('video/') ? 'VIDEO' : 'IMAGE';
-    const media = await productService.addMedia(req.params.id, profile.id, req.file.path, type as any);
+
+    // Upload to Cloudinary (falls back to local path if not configured)
+    const resourceType = type === 'VIDEO' ? 'video' as const : 'image' as const;
+    const { url } = await uploadToCloudinary(req.file.path, {
+      folder: `crochet-hub/products/${req.params.id}`,
+      resourceType,
+    });
+
+    // Save Cloudinary URL (or local path) to database
+    const media = await productService.addMedia(req.params.id, profile.id, url, type as any);
+
+    // Clean up temp file after upload
+    fs.unlink(req.file.path, () => {});
+
     res.status(201).json(media);
   } catch (err) {
+    // Clean up temp file on error too
+    if (req.file) fs.unlink(req.file.path, () => {});
     next(err);
   }
 });

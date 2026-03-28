@@ -18,6 +18,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
   REDIS_URL: z.string().default('redis://localhost:6379'),
+  // Cloudinary (optional — falls back to local disk if not set)
+  CLOUDINARY_CLOUD_NAME: z.string().default(''),
+  CLOUDINARY_API_KEY: z.string().default(''),
+  CLOUDINARY_API_SECRET: z.string().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;

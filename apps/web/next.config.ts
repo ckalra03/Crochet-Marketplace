@@ -8,8 +8,10 @@ const nextConfig: NextConfig = {
       { protocol: 'http', hostname: 'localhost', port: '4000' },
       // Google images (product/category images from Stitch)
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-      // Render backend (production — update hostname after deployment)
+      // Render backend (production)
       { protocol: 'https', hostname: '*.onrender.com' },
+      // Cloudinary CDN (product images)
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   // Output standalone build for production (smaller, self-contained)

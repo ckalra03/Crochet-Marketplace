@@ -1,11 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAddToCart } from '@/lib/hooks/use-cart';
-import { useAuthStore } from '@/lib/stores/auth-store';
 import { toast } from 'sonner';
 
 interface AddToCartSectionProps {
@@ -19,8 +17,8 @@ interface AddToCartSectionProps {
 
 /**
  * Quantity selector + Add to Cart button.
- * Disabled when the product is out of stock or has no price.
- * Redirects unauthenticated users to login.
+ * Works for both authenticated and guest users.
+ * Guest carts use X-Session-ID header (handled by Axios interceptor).
  */
 export function AddToCartSection({
   productId,
@@ -28,8 +26,6 @@ export function AddToCartSection({
   productType,
   priceInCents,
 }: AddToCartSectionProps) {
-  const router = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [quantity, setQuantity] = useState(1);
   const addToCart = useAddToCart();
 
@@ -41,11 +37,6 @@ export function AddToCartSection({
   const isOutOfStock = productType === 'READY_STOCK' && (stockQuantity ?? 0) <= 0;
 
   function handleAdd() {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
     addToCart.mutate(
       { productId, quantity },
       {

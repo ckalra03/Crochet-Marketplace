@@ -11,13 +11,14 @@ import sellerRoutes from './seller.routes';
 import adminRoutes from './admin.routes';
 import wishlistRoutes from './wishlist.routes';
 import notificationRoutes from './notification.routes';
-import { authenticate, requireRole } from '../middleware/auth';
+import { authenticate, optionalAuth, requireRole } from '../middleware/auth';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use('/catalog', catalogRoutes);
-router.use('/cart', authenticate, cartRoutes);
+// Cart uses optionalAuth — guests can add/view cart via X-Session-ID header
+router.use('/cart', optionalAuth, cartRoutes);
 router.use('/checkout', checkoutRoutes);
 router.use('/orders', authenticate, orderRoutes);
 router.use('/on-demand', authenticate, onDemandRoutes);

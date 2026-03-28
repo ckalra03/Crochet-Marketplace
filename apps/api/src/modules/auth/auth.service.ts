@@ -4,11 +4,12 @@ import { v4 as uuidv4 } from 'uuid';
 import prisma from '../../config/database';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from './jwt.service';
 import { createModuleLogger } from '../../support/logger';
+import { cartService } from '../cart/cart.service';
 
 const log = createModuleLogger('auth');
 
 export class AuthService {
-  async register(data: { name: string; email: string; password: string; phone?: string }) {
+  async register(data: { name: string; email: string; password: string; phone?: string }, sessionId?: string) {
     const existing = await prisma.user.findUnique({ where: { email: data.email } });
     if (existing) {
       throw new AppError('Email already registered', 409);
@@ -26,10 +27,16 @@ export class AuthService {
 
     log.info(`User registered: ${user.email}`, { userId: user.id });
     const tokens = await this.generateTokens(user.id, user.role);
+
+    // Merge guest cart into new user's cart if session ID provided
+    if (sessionId) {
+      await cartService.mergeGuestCart(sessionId, user.id);
+    }
+
     return { user: this.sanitizeUser(user), ...tokens };
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string, sessionId?: string) {
     const user = await prisma.user.findUnique({
       where: { email },
       include: { sellerProfile: true },
@@ -45,6 +52,12 @@ export class AuthService {
 
     log.info(`User logged in: ${user.email}`, { userId: user.id });
     const tokens = await this.generateTokens(user.id, user.role, user.sellerProfile?.id);
+
+    // Merge guest cart into user's cart if session ID provided
+    if (sessionId) {
+      await cartService.mergeGuestCart(sessionId, user.id);
+    }
+
     return { user: this.sanitizeUser(user), ...tokens };
   }
 

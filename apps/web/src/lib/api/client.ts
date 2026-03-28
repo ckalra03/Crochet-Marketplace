@@ -32,12 +32,21 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-// Attach auth token from localStorage
+// Attach auth token OR guest session ID to every request
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken');
     if (token) {
+      // Authenticated user — use JWT
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      // Guest user — generate and attach session ID for cart operations
+      let sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        localStorage.setItem('sessionId', sessionId);
+      }
+      config.headers['X-Session-ID'] = sessionId;
     }
   }
   return config;
@@ -82,9 +91,14 @@ api.interceptors.response.use(
     }
 
     // Refresh failed — clear tokens and redirect to login
+    // But don't redirect for guest cart requests (they don't need auth)
+    const isCartRequest = originalRequest.url?.includes('/cart');
+    const hadToken = !!localStorage.getItem('accessToken');
+
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    if (!window.location.pathname.startsWith('/login')) {
+
+    if (hadToken && !isCartRequest && !window.location.pathname.startsWith('/login')) {
       window.location.href = '/login';
     }
 

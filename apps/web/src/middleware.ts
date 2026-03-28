@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // --- Route pattern definitions ---
 
 // Routes that require any authenticated user
+// Note: /cart is NOT protected — guests can view and manage their cart
+// Login is only required at /checkout
 const PROTECTED_PATTERNS = [
-  /^\/cart/,
   /^\/checkout/,
   /^\/orders(\/|$)/,
   /^\/on-demand(\/|$)/,
@@ -141,7 +142,6 @@ export function middleware(request: NextRequest) {
 // Only run middleware on relevant paths (skip static assets, API routes, etc.)
 export const config = {
   matcher: [
-    '/cart/:path*',
     '/checkout/:path*',
     '/orders/:path*',
     '/on-demand/:path*',

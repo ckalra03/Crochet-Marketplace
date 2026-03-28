@@ -14,8 +14,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
-  // Output standalone build for production (smaller, self-contained)
-  output: 'standalone',
+  // Note: do NOT use output: 'standalone' on Vercel — Vercel handles this natively
 };
 
 export default nextConfig;

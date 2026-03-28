@@ -3,9 +3,14 @@
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useCartStore } from '@/lib/stores/cart-store';
-import { ShoppingCart, User, LogOut, Package, LayoutDashboard, Search } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Package, LayoutDashboard } from 'lucide-react';
 import { NotificationBell } from './notification-bell';
 
+/**
+ * Storefront navigation bar.
+ * Shows cart icon for ALL users (guest + authenticated).
+ * Shows auth-specific links (orders, profile, dashboard) only when logged in.
+ */
 export function StorefrontNav() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const itemCount = useCartStore((s) => s.itemCount);
@@ -13,6 +18,7 @@ export function StorefrontNav() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#fcf9f8]/80 backdrop-blur-xl border-b border-[#e7e5e4]/40 shadow-[0_4px_30px_rgba(162,56,44,0.04)]">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        {/* Left: Logo + navigation links */}
         <div className="flex items-center gap-10">
           <Link href="/" className="text-2xl font-black text-primary-600 tracking-tight">
             Crochet Hub
@@ -30,21 +36,29 @@ export function StorefrontNav() {
           </div>
         </div>
 
+        {/* Right: Cart + auth controls */}
         <div className="flex items-center gap-4">
+          {/* Cart icon — always visible (guest + authenticated) */}
+          <Link href="/cart" className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
+            <ShoppingCart className="h-5 w-5" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                {itemCount}
+              </span>
+            )}
+          </Link>
+
           {isAuthenticated ? (
             <>
+              {/* Notification bell — only for authenticated users */}
               <NotificationBell />
-              <Link href="/cart" className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
-                <ShoppingCart className="h-5 w-5" />
-                {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                    {itemCount}
-                  </span>
-                )}
-              </Link>
+
+              {/* Orders link */}
               <Link href="/orders" className="p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
                 <Package className="h-5 w-5" />
               </Link>
+
+              {/* Role-specific dashboard links */}
               {user?.role === 'SELLER' && (
                 <Link href="/seller" className="text-sm font-medium text-[#1c1b1b] hover:text-primary-600 transition-colors hidden md:block">
                   Seller Dashboard
@@ -55,6 +69,8 @@ export function StorefrontNav() {
                   <LayoutDashboard className="h-4 w-4" /> Admin
                 </Link>
               )}
+
+              {/* User avatar + logout */}
               <div className="border-l border-[#e7e5e4] pl-4 ml-2 flex items-center gap-3">
                 <Link href="/profile" className="w-9 h-9 rounded-full bg-primary-600/10 flex items-center justify-center text-primary-600 font-bold text-sm hover:bg-primary-600/20 transition-colors">
                   {user?.name?.charAt(0) || 'U'}
@@ -66,6 +82,7 @@ export function StorefrontNav() {
               </div>
             </>
           ) : (
+            /* Guest: Login + Sign Up buttons */
             <div className="flex items-center gap-3">
               <Link href="/login" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors text-sm">
                 Login

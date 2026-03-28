@@ -1,6 +1,6 @@
 import type { ProductListParams, CategoryProductParams } from './catalog';
 import type { OrderListParams } from './orders';
-import type { AuditLogParams, SellerListParams, AdminOrderListParams, PendingProductsParams, AdminProductListParams, WarehouseParams, PayoutListParams, RevenueAnalyticsParams, OrderAnalyticsParams, SellerAnalyticsParams, CategoryAnalyticsParams, SlaBreachParams, AdminPenaltyListParams, PerformanceListParams } from './admin';
+import type { AuditLogParams, SellerListParams, AdminOrderListParams, PendingProductsParams, AdminProductListParams, WarehouseParams, PayoutListParams, RevenueAnalyticsParams, OrderAnalyticsParams, SellerAnalyticsParams, CategoryAnalyticsParams, SlaBreachParams, AdminPenaltyListParams, PerformanceListParams, CouponListParams } from './admin';
 import type { PaginationParams, SellerPenaltyParams, SellerSlaBreachParams } from './seller';
 import type { WishlistParams } from './wishlist';
 import type { NotificationParams } from './notifications';
@@ -124,5 +124,8 @@ export const queryKeys = {
     // Seller Performance
     sellerPerformance: (params?: PerformanceListParams) =>
       ['admin', 'performance', 'sellers', params] as const,
+
+    // Coupons
+    coupons: (params?: CouponListParams) => ['admin', 'coupons', params] as const,
   },
 } as const;

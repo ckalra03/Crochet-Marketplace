@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAddToCart } from '@/lib/hooks/use-cart';
+import { useCartStore } from '@/lib/stores/cart-store';
 import { toast } from 'sonner';
 
 interface AddToCartSectionProps {
@@ -28,6 +29,7 @@ export function AddToCartSection({
 }: AddToCartSectionProps) {
   const [quantity, setQuantity] = useState(1);
   const addToCart = useAddToCart();
+  const openDrawer = useCartStore((s) => s.openDrawer);
 
   // On-Demand items or items without a price cannot be added to cart
   if (productType === 'ON_DEMAND' || !priceInCents) {
@@ -40,7 +42,11 @@ export function AddToCartSection({
     addToCart.mutate(
       { productId, quantity },
       {
-        onSuccess: () => toast.success('Added to cart!'),
+        onSuccess: () => {
+          toast.success('Added to cart!');
+          // Open the side cart drawer to show the updated cart
+          openDrawer();
+        },
         onError: (err: any) =>
           toast.error(err.response?.data?.error || 'Failed to add to cart'),
       },

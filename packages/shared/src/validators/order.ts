@@ -8,6 +8,8 @@ export const checkoutSchema = z.object({
   }),
   // Payment method: COD is the only option for now
   paymentMethod: z.enum(['COD']).optional().default('COD'),
+  // Optional coupon code to apply discount
+  couponCode: z.string().max(50).optional(),
 });
 
 export const cancelOrderSchema = z.object({

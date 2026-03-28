@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils/cn';
-import { LayoutDashboard, Package, ShoppingBag, CreditCard, Star, UserCircle, Users, ClipboardCheck, Truck, AlertTriangle, FileText, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, CreditCard, Star, UserCircle, Users, ClipboardCheck, Truck, AlertTriangle, FileText, BarChart3, Tag } from 'lucide-react';
 
 interface SidebarItem {
   label: string;
@@ -76,5 +76,6 @@ export const adminSidebarItems: SidebarItem[] = [
   { label: 'Returns', href: '/admin/returns', icon: <Truck className="h-4 w-4" /> },
   { label: 'Disputes', href: '/admin/disputes', icon: <AlertTriangle className="h-4 w-4" /> },
   { label: 'Payouts', href: '/admin/payouts', icon: <CreditCard className="h-4 w-4" /> },
+  { label: 'Coupons', href: '/admin/coupons', icon: <Tag className="h-4 w-4" /> },
   { label: 'Audit Logs', href: '/admin/audit-logs', icon: <BarChart3 className="h-4 w-4" /> },
 ];

@@ -16,6 +16,7 @@ router.post(
         shippingAddressId: req.body.shippingAddressId,
         notes: req.body.notes,
         paymentMethod: req.body.paymentMethod || 'COD',
+        couponCode: req.body.couponCode,
       });
       res.status(201).json(order);
     } catch (err) {

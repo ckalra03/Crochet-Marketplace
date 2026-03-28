@@ -92,15 +92,19 @@ export function StorefrontNav() {
 
         {/* Right: Cart + auth controls */}
         <div className="flex items-center gap-4">
-          {/* Cart icon — always visible (guest + authenticated) */}
-          <Link href="/cart" className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
+          {/* Cart icon — opens side cart drawer instead of navigating */}
+          <button
+            onClick={() => useCartStore.getState().openDrawer()}
+            className="relative p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors"
+            aria-label="Open cart"
+          >
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
                 {itemCount}
               </span>
             )}
-          </Link>
+          </button>
 
           {isAuthenticated ? (
             <>

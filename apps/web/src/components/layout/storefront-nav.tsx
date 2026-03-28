@@ -1,9 +1,11 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/auth-store';
 import { useCartStore } from '@/lib/stores/cart-store';
-import { ShoppingCart, User, LogOut, Package, LayoutDashboard } from 'lucide-react';
+import { useCategories } from '@/lib/hooks/use-catalog';
+import { ShoppingCart, User, LogOut, Package, LayoutDashboard, ChevronDown } from 'lucide-react';
 import { NotificationBell } from './notification-bell';
 
 /**
@@ -14,6 +16,22 @@ import { NotificationBell } from './notification-bell';
 export function StorefrontNav() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const itemCount = useCartStore((s) => s.itemCount);
+  const { data: categories } = useCategories();
+
+  // Hover dropdown state for categories (desktop only)
+  const [catOpen, setCatOpen] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Open dropdown on mouse enter, cancel any pending close
+  function handleCatEnter() {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setCatOpen(true);
+  }
+
+  // Delay closing so user can move mouse from trigger to dropdown
+  function handleCatLeave() {
+    closeTimer.current = setTimeout(() => setCatOpen(false), 150);
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#fcf9f8]/80 backdrop-blur-xl border-b border-[#e7e5e4]/40 shadow-[0_4px_30px_rgba(162,56,44,0.04)]">
@@ -27,13 +45,49 @@ export function StorefrontNav() {
             <Link href="/products" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
               Shop
             </Link>
-            <Link href="/products" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
-              Categories
-            </Link>
+
+            {/* Categories hover dropdown (desktop) */}
+            <div
+              className="relative"
+              onMouseEnter={handleCatEnter}
+              onMouseLeave={handleCatLeave}
+            >
+              <button className="flex items-center gap-1 text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
+                Categories
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${catOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown panel */}
+              {catOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-[#e7e5e4]/60 py-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                  {categories && categories.length > 0 ? (
+                    categories.map((cat: any) => (
+                      <Link
+                        key={cat.id}
+                        href={`/products?categoryId=${cat.id}`}
+                        className="block px-4 py-2.5 text-sm text-[#1c1b1b] hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        onClick={() => setCatOpen(false)}
+                      >
+                        {cat.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <span className="block px-4 py-2.5 text-sm text-muted-foreground">
+                      No categories yet
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Link href="/on-demand/new" className="text-[#1c1b1b] font-medium hover:text-primary-600 transition-colors duration-300 text-sm">
               Custom Order
             </Link>
+
+            {/* Mobile: Categories just links to /products (no hover on touch) */}
           </div>
+
+          {/* Mobile nav: simple Categories link (visible on small screens via md:hidden) */}
         </div>
 
         {/* Right: Cart + auth controls */}

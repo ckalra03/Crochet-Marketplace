@@ -1,4 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
+import prisma from '../config/database';
 import { sellerService } from '../modules/seller-onboarding/seller.service';
 import { productService } from '../modules/products/product.service';
 import { orderService } from '../modules/orders/order.service';
@@ -105,7 +107,76 @@ router.post(
   },
 );
 
+// Create a new seller directly (admin bypass)
+router.post(
+  '/sellers/create',
+  validate(z.object({
+    name: z.string().min(1).max(200),
+    email: z.string().email(),
+    password: z.string().min(6).max(100),
+    businessName: z.string().min(1).max(200),
+  })),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { name, email, password, businessName } = req.body;
+
+      // Check if email already exists
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        return res.status(409).json({ error: 'A user with this email already exists' });
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      // Create user + seller profile in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: {
+            name,
+            email,
+            passwordHash,
+            role: 'SELLER',
+            emailVerifiedAt: new Date(),
+          },
+        });
+
+        const sellerProfile = await tx.sellerProfile.create({
+          data: {
+            userId: user.id,
+            businessName,
+            status: 'APPROVED',
+            approvedBy: req.user!.userId,
+            approvedAt: new Date(),
+            commissionRate: 1500, // 15% default
+          },
+        });
+
+        return { user: { id: user.id, name: user.name, email: user.email }, sellerProfile };
+      });
+
+      res.status(201).json(result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // ─── Product Approval ──────────────────────────────
+
+// List all products with optional status filter (admin view)
+router.get('/products', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await productService.listAllProducts(
+      req.query.status as string | undefined,
+      Number(req.query.page) || 1,
+      Number(req.query.limit) || 20,
+    );
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/products/pending', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await productService.listPendingProducts(
@@ -113,6 +184,16 @@ router.get('/products/pending', async (req: Request, res: Response, next: NextFu
       Number(req.query.limit) || 20,
     );
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Fetch a single product by ID (admin view)
+router.get('/products/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const product = await productService.getProductById(req.params.id);
+    res.json(product);
   } catch (err) {
     next(err);
   }
@@ -186,6 +267,16 @@ router.get('/on-demand-requests', async (req: Request, res: Response, next: Next
   try {
     const result = await onDemandService.listAllRequests(req.query.status as string);
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Fetch a single on-demand request by ID with quotes and user details
+router.get('/on-demand-requests/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const request = await onDemandService.getRequestDetail(req.params.id);
+    res.json(request);
   } catch (err) {
     next(err);
   }

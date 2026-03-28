@@ -28,6 +28,7 @@ import { AddressSelector } from '@/components/checkout/address-selector';
 import { OrderSummary } from '@/components/checkout/order-summary';
 import { PaymentSection } from '@/components/checkout/payment-section';
 import { OTPVerification } from '@/components/checkout/otp-verification';
+import { CouponInput } from '@/components/cart/coupon-input';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useAddresses } from '@/lib/hooks/use-profile';
 import { useCreateOrder } from '@/lib/hooks/use-checkout';
@@ -47,6 +48,12 @@ export default function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState('');
   const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
   const [notes, setNotes] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    couponId: string;
+    code: string;
+    type: string;
+    discountCents: number;
+  } | null>(null);
 
   // Pre-select the default address once addresses load
   useEffect(() => {
@@ -130,6 +137,8 @@ export default function CheckoutPage() {
         shippingAddressId: selectedAddress,
         notes: notes || undefined,
         paymentMethod: 'COD', // COD is the only payment method for now
+        policyAcknowledged: true,
+        couponCode: appliedCoupon?.code,
       },
       {
         onSuccess: (data: any) => {
@@ -179,6 +188,14 @@ export default function CheckoutPage() {
             onPolicyChange={setPolicyAcknowledged}
           />
         </div>
+
+        {/* Coupon Code */}
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-sm font-semibold mb-3">Coupon Code</h3>
+            <CouponInput onCouponChange={setAppliedCoupon} appliedCoupon={appliedCoupon} />
+          </CardContent>
+        </Card>
 
         {/* Order notes (optional) */}
         <Card>

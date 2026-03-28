@@ -4,6 +4,8 @@ export interface CheckoutData {
   shippingAddressId: string;
   notes?: string;
   paymentMethod?: 'COD';
+  policyAcknowledged: boolean;
+  couponCode?: string;
 }
 
 /** Create an order from the current cart contents. */

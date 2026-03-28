@@ -64,6 +64,17 @@ export async function suspendSeller(id: string, data: { reason: string }) {
   return res.data;
 }
 
+/** Create a new seller with an approved profile (admin bypass). */
+export async function createSeller(data: {
+  name: string;
+  email: string;
+  password: string;
+  businessName: string;
+}) {
+  const res = await api.post('/admin/sellers/create', data);
+  return res.data;
+}
+
 // ─── Product Approval ────────────────────────────────
 
 export interface PendingProductsParams {

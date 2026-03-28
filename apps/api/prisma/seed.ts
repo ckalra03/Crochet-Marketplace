@@ -151,14 +151,41 @@ async function main() {
     },
   ];
 
+  // Product images from Stitch designs, keyed by slug
+  const productImages: Record<string, string> = {
+    'crochet-teddy-bear': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAbSKaOXBYr5LiWAkLU7I9QiHsBAOn_e7Q5z-rPM_kByU6zwp5dveyAWX7zxiAYCmRH6-2cEwwvJ8ZE5FKoseVlt3SYzM2bSIjjv2KMM9_MnMsomKrLiIu81K_cMfTOva6rL272VaZw6t8GFQ7vR8AxghtbsOHsXDdRmvu4_-Ecj9sjHW977ww5JnkCDJqhfVRkgxbKdOSRK8NT8mdIsiNH2S5Y53vt9LT_fKi3X_WCsqo6ifQeFkj7uy-93XH0PDa-0UJHALrKmA',
+    'rainbow-baby-blanket': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDZ5JIhgSf7Ga0kkXgUkMRmIDNrKrW2FnP1RMXTXNaJEILAfW3CA699CJEHIBeafstrbQyE1w16St1_v9tWbDh7F8SKEw6HVTLd2YVC8RNxQbmjX31jSxjJENjhNaOBISBJ3ECF4OsxFDSVnvUyjso70Dq0oCaFEZF1RT9aJ4_NUhnnosAM8n4lOdjKrmqY162KIk3vD5GA-6hwLDoLckPEvdUt5d4RdyiOpudeqD18g8RTb5H_rCyb-L8YOnOlSTXJyuIS6JGmnw',
+    'bohemian-market-bag': 'https://lh3.googleusercontent.com/aida-public/AB6AXuATM8hIhzbXVvN-0Skb7am9WxJuyxF4_U4mfFD8eZrWf0DJmAqfKg1hm8Jd8amW-pk3HfSKHkJcA4ee4zCKJ0R4u38OzEG45o33b4DvdHjRl_nRMCwCy8yBvBncWCy23GYkNdkfUVxYgZGaySLk8QwXd0FPdDcCo4kAJRgagPxXcAAPfz01FVQPBvJtXTG-pR3fVzKg5EzbN3lrkkByxDjP03faImhqupbC1REBxVYXx8k4Ic9ol3keAqg4QplHKBfkiG_e1ZxOzg',
+    'macrame-wall-hanging': 'https://lh3.googleusercontent.com/aida-public/AB6AXuAnzE8LajGofEuJBtd8SDDXTf-PPmmLu9ppDZevjvzqTUw9L-6bCjKJpcxOl5PRVNY_TvIhpL6zRR9cmvO_azhG-5TCZLosIUxnli39sfwU_fRr0q8RCWA-zpoJqlvOxqowOEQhdbWVocEMivblTfEtAiThuvRYm5aoZdwsJquFKKlaPMAVBi8zgLSzM7dMNkxZrodDhBh9GI0xRHUy_-tXKQr0_ijRGf_q2bns1k6UVHjt7lNUB1qRqcK2YPeBFkP1f2Ng_2Zu0Q',
+  };
+
   for (const product of products) {
-    await prisma.product.upsert({
+    const created = await prisma.product.upsert({
       where: { slug: product.slug },
       update: {},
       create: product,
     });
+
+    // Add product media if image exists and no media record exists yet
+    const imageUrl = productImages[product.slug];
+    if (imageUrl) {
+      const existingMedia = await prisma.productMedia.findFirst({
+        where: { productId: created.id },
+      });
+      if (!existingMedia) {
+        await prisma.productMedia.create({
+          data: {
+            productId: created.id,
+            filePath: imageUrl,
+            type: 'IMAGE',
+            isPrimary: true,
+            sortOrder: 0,
+          },
+        });
+      }
+    }
   }
-  console.log(`  Products: ${products.length} created`);
+  console.log(`  Products: ${products.length} created (with images)`);
 
   // ─── Buyer Address ───────────────────────────────
   const existingAddress = await prisma.address.findFirst({ where: { userId: buyer.id } });

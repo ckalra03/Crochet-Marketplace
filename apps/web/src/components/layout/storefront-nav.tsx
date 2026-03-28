@@ -50,13 +50,13 @@ export function StorefrontNav() {
 
           {isAuthenticated ? (
             <>
-              {/* Notification bell — only for authenticated users */}
-              <NotificationBell />
-
               {/* Orders link */}
               <Link href="/orders" className="p-2 text-[#1c1b1b] hover:text-primary-600 transition-colors">
                 <Package className="h-5 w-5" />
               </Link>
+
+              {/* Notification bell — positioned after orders to avoid overlapping cart */}
+              <NotificationBell />
 
               {/* Role-specific dashboard links */}
               {user?.role === 'SELLER' && (

@@ -43,8 +43,16 @@ export class ProductService {
     });
     if (!product) throw new AppError('Product not found', 404);
     if (product.status === 'APPROVED') {
-      // Re-set to draft if editing an approved product
-      data.status = 'DRAFT';
+      // Only reset to DRAFT if structural fields are changing (require re-approval).
+      // Price, stock, and lead time changes are allowed without re-approval.
+      const structuralFields = ['name', 'description', 'categoryId', 'productType', 'returnPolicy'];
+      const isStructuralChange = structuralFields.some(
+        (field) => data[field] !== undefined && data[field] !== (product as any)[field]
+      );
+      if (isStructuralChange) {
+        data.status = 'DRAFT';
+        log.info(`Approved product reset to DRAFT due to structural edit`, { productId });
+      }
     }
 
     return prisma.product.update({

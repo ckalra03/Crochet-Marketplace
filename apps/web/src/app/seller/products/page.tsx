@@ -11,7 +11,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Plus, Pencil, Trash2, Send, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Send, Package, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -126,6 +126,16 @@ export default function SellerProductsPage() {
                 title="Edit"
               >
                 <Pencil className="h-4 w-4" />
+              </Button>
+
+              {/* Preview button */}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => router.push(`/seller/products/${product.id}/preview`)}
+                title="Preview"
+              >
+                <Eye className="h-4 w-4" />
               </Button>
 
               {/* Submit for approval -- only for DRAFT or REJECTED */}

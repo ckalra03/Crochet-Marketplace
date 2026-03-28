@@ -3,10 +3,12 @@
 /**
  * Edit Product page -- pre-populates the ProductForm with existing product data.
  * Fetches the product via the seller API using the [id] route param.
+ * Uses useCategories() hook instead of raw fetch for consistency.
+ * Waits for BOTH product and categories to load before rendering the form.
+ * Passes media data to the form so the Images tab works on edit.
  * Breadcrumb: Dashboard > Products > Edit.
  */
 
-import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -20,8 +22,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { ProductForm } from '@/components/seller/product-form';
 import { useSellerProduct } from '@/lib/hooks/use-seller';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+import { useCategories } from '@/lib/hooks/use-catalog';
 
 export default function EditProductPage() {
   const params = useParams();
@@ -30,17 +31,12 @@ export default function EditProductPage() {
   // Fetch the product to pre-populate the form
   const { data: product, isLoading: productLoading } = useSellerProduct(productId);
 
-  // Fetch categories for the dropdown
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  // Use the shared hook for categories (cached via React Query)
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
 
-  useEffect(() => {
-    fetch(`${API_URL}/catalog/categories`)
-      .then((r) => r.json())
-      .then(setCategories)
-      .catch(() => {});
-  }, []);
-
-  if (productLoading) {
+  // Bug fix: wait for BOTH product and categories before rendering the form
+  // to avoid race conditions where form renders before categories are ready
+  if (productLoading || categoriesLoading) {
     return <div className="py-20 text-center">Loading product...</div>;
   }
 
@@ -48,7 +44,8 @@ export default function EditProductPage() {
     return <div className="py-20 text-center text-muted-foreground">Product not found.</div>;
   }
 
-  // Map the API response to the initialData shape expected by ProductForm
+  // Map the API response to the initialData shape expected by ProductForm.
+  // Bug fix: include media so the Images tab works properly on edit.
   const initialData = {
     id: product.id,
     name: product.name ?? '',
@@ -63,6 +60,7 @@ export default function EditProductPage() {
     materials: product.materials ?? '',
     dimensions: product.dimensions ?? '',
     careInstructions: product.careInstructions ?? '',
+    media: product.media ?? [],
   };
 
   return (

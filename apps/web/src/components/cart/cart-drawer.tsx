@@ -6,6 +6,7 @@
  * Controlled by the Zustand cart store (isDrawerOpen / openDrawer / closeDrawer).
  */
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Trash2, Minus, Plus, ShoppingCart } from 'lucide-react';
 import {
@@ -18,16 +19,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useCartStore } from '@/lib/stores/cart-store';
-import { useAuthStore } from '@/lib/stores/auth-store';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/hooks/use-cart';
 import { formatMoney } from '@/lib/utils/format';
+import { CouponInput } from './coupon-input';
 import { toast } from 'sonner';
 
 export function CartDrawer() {
   const isDrawerOpen = useCartStore((s) => s.isDrawerOpen);
   const closeDrawer = useCartStore((s) => s.closeDrawer);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
   // Fetch cart data when drawer is open
   const { data: cart } = useCart();
   const updateMutation = useUpdateCartItem();
@@ -165,44 +164,64 @@ export function CartDrawer() {
 
         {/* Footer with total and action buttons -- only show when cart has items */}
         {items.length > 0 && (
-          <div className="border-t px-6 py-4 space-y-3">
-            {/* Cart total */}
-            <div className="flex justify-between items-center">
-              <span className="font-semibold">Subtotal</span>
-              <span className="font-bold text-lg text-primary-600">
-                {formatMoney(totalInCents)}
-              </span>
-            </div>
-
-            <Separator />
-
-            {/* Action buttons */}
-            <div className="space-y-2">
-              {/* Checkout button -- routes based on auth state */}
-              {isAuthenticated ? (
-                <Link href="/checkout" onClick={closeDrawer}>
-                  <Button className="w-full" size="lg">
-                    Checkout
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/login?redirect=/checkout" onClick={closeDrawer}>
-                  <Button className="w-full" size="lg">
-                    Sign in to Checkout
-                  </Button>
-                </Link>
-              )}
-
-              {/* View full cart page */}
-              <Link href="/cart" onClick={closeDrawer}>
-                <Button variant="outline" className="w-full">
-                  View Cart
-                </Button>
-              </Link>
-            </div>
-          </div>
+          <CartDrawerFooter totalInCents={totalInCents} closeDrawer={closeDrawer} />
         )}
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Footer sub-component with coupon input, subtotal, and checkout buttons. */
+function CartDrawerFooter({ totalInCents, closeDrawer }: { totalInCents: number; closeDrawer: () => void }) {
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    couponId: string;
+    code: string;
+    type: string;
+    discountCents: number;
+  } | null>(null);
+
+  const discountCents = appliedCoupon?.discountCents ?? 0;
+  const finalTotal = Math.max(0, totalInCents - discountCents);
+
+  return (
+    <div className="border-t px-6 py-4 space-y-3">
+      {/* Coupon input */}
+      <CouponInput onCouponChange={setAppliedCoupon} appliedCoupon={appliedCoupon} />
+
+      {appliedCoupon && (
+        <div className="flex justify-between text-sm text-green-600">
+          <span>Discount</span>
+          <span>-{formatMoney(discountCents)}</span>
+        </div>
+      )}
+
+      <Separator />
+
+      {/* Cart total */}
+      <div className="flex justify-between items-center">
+        <span className="font-semibold">Subtotal</span>
+        <span className="font-bold text-lg text-primary-600">
+          {formatMoney(finalTotal)}
+        </span>
+      </div>
+
+      <Separator />
+
+      {/* Action buttons -- guests verify via OTP on the checkout page */}
+      <div className="space-y-2">
+        <Link href="/checkout" onClick={closeDrawer}>
+          <Button className="w-full" size="lg">
+            Checkout
+          </Button>
+        </Link>
+
+        {/* View full cart page */}
+        <Link href="/cart" onClick={closeDrawer}>
+          <Button variant="outline" className="w-full">
+            View Cart
+          </Button>
+        </Link>
+      </div>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import prisma from '../../config/database';
 import { AppError } from '../auth/auth.service';
+import { deleteFromCloudinary } from '../../config/cloudinary';
 import { writeAuditLog } from '../../support/audit-logger';
 import { createModuleLogger } from '../../support/logger';
 
@@ -68,10 +69,26 @@ export class ProductService {
     });
     if (!product) throw new AppError('Product not found', 404);
 
+    // Delete CDN images before soft-deleting the product
+    const mediaItems = await prisma.productMedia.findMany({ where: { productId } });
+    for (const media of mediaItems) {
+      if (media.filePath && media.filePath.includes('cloudinary.com')) {
+        // Extract public ID from Cloudinary URL:
+        // https://res.cloudinary.com/xxx/image/upload/v123/crochet-hub/products/abc/filename.jpg
+        // → public ID: crochet-hub/products/abc/filename
+        const match = media.filePath.match(/\/upload\/v\d+\/(.+)\.\w+$/);
+        if (match) {
+          await deleteFromCloudinary(match[1]);
+        }
+      }
+    }
+
     await prisma.product.update({
       where: { id: productId },
       data: { deletedAt: new Date(), isActive: false },
     });
+
+    log.info(`Product deleted with ${mediaItems.length} media cleaned up`, { productId, sellerProfileId });
   }
 
   async submitForApproval(productId: string, sellerProfileId: string) {
@@ -154,6 +171,45 @@ export class ProductService {
   }
 
   // Admin methods
+
+  /** List all products with optional status filter (admin view). */
+  async listAllProducts(status?: string, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const where: any = { deletedAt: null };
+    if (status) where.status = status;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          category: true,
+          sellerProfile: { select: { id: true, businessName: true } },
+          media: { take: 1, orderBy: { sortOrder: 'asc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    return { products, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+  }
+
+  /** Fetch a single product by ID (admin view, no seller scope). */
+  async getProductById(productId: string) {
+    const product = await prisma.product.findFirst({
+      where: { id: productId, deletedAt: null },
+      include: {
+        category: true,
+        sellerProfile: { select: { id: true, businessName: true } },
+        media: { orderBy: { sortOrder: 'asc' } },
+      },
+    });
+    if (!product) throw new AppError('Product not found', 404);
+    return product;
+  }
+
   async listPendingProducts(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where = { status: 'PENDING_APPROVAL' as const, deletedAt: null };

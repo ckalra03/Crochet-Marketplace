@@ -12,7 +12,7 @@ const PROTECTED_PATTERNS = [
   /^\/profile(\/|$)/,
 ];
 
-// Routes that require the SELLER role (except /seller/register which any auth user can access)
+// Routes that require the SELLER role (except /seller/register which is public)
 const SELLER_PATTERNS = [/^\/seller(?!\/register)(\/|$)/];
 
 // Routes that require the ADMIN role

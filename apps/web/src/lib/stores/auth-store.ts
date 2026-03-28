@@ -47,6 +47,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     // Sync token to cookie for edge middleware route protection
     setAccessTokenCookie(accessToken);
 
+    // Clear guest session ID — cart has been merged server-side on login/register
+    localStorage.removeItem('sessionId');
+
     set({ user, accessToken, isAuthenticated: true });
   },
 

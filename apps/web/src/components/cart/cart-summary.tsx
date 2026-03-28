@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, ShoppingCart } from 'lucide-react';
+import { ArrowRight, LogIn, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { formatMoney } from '@/lib/utils/format';
+import { useAuthStore } from '@/lib/stores/auth-store';
 
 interface CartSummaryProps {
   /** Total price in cents */
@@ -16,9 +17,12 @@ interface CartSummaryProps {
 
 /**
  * Cart summary sidebar showing subtotal, item count, and checkout CTA.
- * Sticky on desktop so it stays visible while scrolling items.
+ * Shows "Proceed to Checkout" for authenticated users.
+ * Shows "Sign in to Checkout" for guest users.
  */
 export function CartSummary({ totalInCents, itemCount }: CartSummaryProps) {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+
   return (
     <Card className="h-fit sticky top-20">
       <CardContent className="p-6">
@@ -51,12 +55,26 @@ export function CartSummary({ totalInCents, itemCount }: CartSummaryProps) {
           </div>
         </div>
 
-        {/* Checkout CTA */}
-        <Link href="/checkout">
-          <Button className="w-full mt-6 gap-2" size="lg">
-            Proceed to Checkout <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        {/* Checkout CTA — different for authenticated vs guest users */}
+        {isAuthenticated ? (
+          <Link href="/checkout">
+            <Button className="w-full mt-6 gap-2" size="lg">
+              Proceed to Checkout <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        ) : (
+          <div className="mt-6 space-y-3">
+            <Link href="/login?redirect=/cart">
+              <Button className="w-full gap-2" size="lg">
+                <LogIn className="h-4 w-4" />
+                Sign in to Checkout
+              </Button>
+            </Link>
+            <p className="text-xs text-center text-muted-foreground">
+              Your cart will be saved when you sign in
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

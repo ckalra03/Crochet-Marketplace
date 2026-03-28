@@ -32,7 +32,9 @@ router.post(
   validate(registerSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await authService.register(req.body);
+      // Pass guest session ID so cart can be merged into new user's cart
+      const sessionId = req.headers['x-session-id'] as string | undefined;
+      const result = await authService.register(req.body, sessionId);
       res.status(201).json(result);
     } catch (err) {
       next(err);
@@ -46,7 +48,9 @@ router.post(
   validate(loginSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await authService.login(req.body.email, req.body.password);
+      // Pass guest session ID so cart can be merged into user's cart on login
+      const sessionId = req.headers['x-session-id'] as string | undefined;
+      const result = await authService.login(req.body.email, req.body.password, sessionId);
       res.json(result);
     } catch (err) {
       next(err);

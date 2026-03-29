@@ -51,7 +51,9 @@ export function OrderSummary({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Order Summary</CardTitle>
+        <CardTitle className="text-lg">
+          Order Summary ({items.length} {items.length === 1 ? 'item' : 'items'})
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {/* Item list */}

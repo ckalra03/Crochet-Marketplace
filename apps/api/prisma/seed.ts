@@ -97,7 +97,7 @@ async function main() {
       description: 'Adorable handmade crochet teddy bear, perfect for gifts. Made with premium cotton yarn in a smoke-free environment. Approximately 12 inches tall.',
       productType: ProductType.READY_STOCK,
       priceInCents: 89900, // ₹899
-      stockQuantity: 5,
+      stockQuantity: 9999,
       returnPolicy: ReturnPolicy.DEFECT_ONLY,
       status: ProductStatus.APPROVED,
       approvedBy: admin.id,
@@ -127,7 +127,7 @@ async function main() {
       description: 'Stylish and sturdy crochet market bag with bohemian pattern. Perfect for groceries, beach trips, or everyday use.',
       productType: ProductType.READY_STOCK,
       priceInCents: 59900, // ₹599
-      stockQuantity: 8,
+      stockQuantity: 9999,
       returnPolicy: ReturnPolicy.DEFECT_ONLY,
       status: ProductStatus.APPROVED,
       approvedBy: admin.id,
@@ -162,7 +162,13 @@ async function main() {
   for (const product of products) {
     const created = await prisma.product.upsert({
       where: { slug: product.slug },
-      update: {},
+      // On re-run: replenish stock, re-approve, and re-activate
+      update: {
+        stockQuantity: product.stockQuantity ?? undefined,
+        status: ProductStatus.APPROVED,
+        isActive: true,
+        deletedAt: null,
+      },
       create: product,
     });
 

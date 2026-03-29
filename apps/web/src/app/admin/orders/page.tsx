@@ -42,8 +42,9 @@ interface OrderRow {
   totalInCents: number;
   createdAt: string;
   user?: { name: string; email: string };
-  _count?: { orderItems: number };
+  _count?: { orderItems: number; items: number };
   orderItems?: any[];
+  items?: any[];
 }
 
 export default function AdminOrdersPage() {
@@ -101,7 +102,7 @@ export default function AdminOrdersPage() {
         accessorKey: 'itemsCount',
         header: 'Items',
         accessorFn: (row) =>
-          row._count?.orderItems ?? row.orderItems?.length ?? 0,
+          row._count?.orderItems ?? row._count?.items ?? row.items?.length ?? row.orderItems?.length ?? 0,
         cell: ({ getValue }) => (
           <span className="text-sm">{getValue() as number}</span>
         ),

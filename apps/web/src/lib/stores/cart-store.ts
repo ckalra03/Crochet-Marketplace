@@ -14,18 +14,27 @@ interface CartItem {
   };
 }
 
+/** Applied coupon state shared between cart and checkout */
+interface AppliedCoupon {
+  couponId: string;
+  code: string;
+  type: string;
+  discountCents: number;
+}
+
 interface CartState {
   items: CartItem[];
   totalInCents: number;
   itemCount: number;
   /** Whether the side cart drawer is open */
   isDrawerOpen: boolean;
+  /** Coupon applied in cart — persists to checkout */
+  appliedCoupon: AppliedCoupon | null;
   setCart: (items: CartItem[], totalInCents: number) => void;
   clearCart: () => void;
-  /** Open the side cart drawer */
   openDrawer: () => void;
-  /** Close the side cart drawer */
   closeDrawer: () => void;
+  setCoupon: (coupon: AppliedCoupon | null) => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
@@ -33,9 +42,11 @@ export const useCartStore = create<CartState>((set) => ({
   totalInCents: 0,
   itemCount: 0,
   isDrawerOpen: false,
+  appliedCoupon: null,
   setCart: (items, totalInCents) =>
     set({ items, totalInCents, itemCount: items.length }),
-  clearCart: () => set({ items: [], totalInCents: 0, itemCount: 0 }),
+  clearCart: () => set({ items: [], totalInCents: 0, itemCount: 0, appliedCoupon: null }),
   openDrawer: () => set({ isDrawerOpen: true }),
   closeDrawer: () => set({ isDrawerOpen: false }),
+  setCoupon: (coupon) => set({ appliedCoupon: coupon }),
 }));

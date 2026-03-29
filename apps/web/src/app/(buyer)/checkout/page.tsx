@@ -33,6 +33,7 @@ import { useCart } from '@/lib/hooks/use-cart';
 import { useAddresses } from '@/lib/hooks/use-profile';
 import { useCreateOrder } from '@/lib/hooks/use-checkout';
 import { useAuthStore } from '@/lib/stores/auth-store';
+import { useCartStore } from '@/lib/stores/cart-store';
 import { toast } from 'sonner';
 
 export default function CheckoutPage() {
@@ -48,12 +49,16 @@ export default function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState('');
   const [policyAcknowledged, setPolicyAcknowledged] = useState(false);
   const [notes, setNotes] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    couponId: string;
-    code: string;
-    type: string;
-    discountCents: number;
-  } | null>(null);
+  // Read coupon from cart store (persisted from cart/drawer page)
+  const storedCoupon = useCartStore((s) => s.appliedCoupon);
+  const setCouponInStore = useCartStore((s) => s.setCoupon);
+  const [appliedCoupon, setAppliedCoupon] = useState(storedCoupon);
+
+  // Sync local state with store
+  function handleCouponChange(coupon: typeof appliedCoupon) {
+    setAppliedCoupon(coupon);
+    setCouponInStore(coupon);
+  }
 
   // Pre-select the default address once addresses load
   useEffect(() => {
@@ -193,7 +198,7 @@ export default function CheckoutPage() {
         <Card>
           <CardContent className="pt-6">
             <h3 className="text-sm font-semibold mb-3">Coupon Code</h3>
-            <CouponInput onCouponChange={setAppliedCoupon} appliedCoupon={appliedCoupon} />
+            <CouponInput onCouponChange={handleCouponChange} appliedCoupon={appliedCoupon} />
           </CardContent>
         </Card>
 

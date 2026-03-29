@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Note: /cart is NOT protected — guests can view and manage their cart.
 // /checkout and /on-demand/new are NOT protected — guests verify via OTP inline.
 const PROTECTED_PATTERNS = [
-  /^\/orders(\/|$)/,
+  /^\/orders(?!\/[^/]+\/confirmation)(\/|$)/,  // Allow /orders/{id}/confirmation for guests
   /^\/on-demand(?!\/new)(\/|$)/,  // protect /on-demand and /on-demand/:id but NOT /on-demand/new
   /^\/returns(\/|$)/,
   /^\/profile(\/|$)/,
